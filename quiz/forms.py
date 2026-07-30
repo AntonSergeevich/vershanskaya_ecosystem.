@@ -10,7 +10,10 @@ class ContactForm(forms.Form):
     дешёвый момент, чтобы попросить телефон.
     """
     contact_name = forms.CharField(label="Как вас зовут", max_length=120)
-    contact_phone = forms.CharField(label="Телефон", max_length=20, required=False)
+    contact_phone = forms.CharField(
+        label="Телефон", max_length=20, required=False,
+        # Маска включается по data-phone (static/js/phone.js).
+        widget=forms.TextInput(attrs={'data-phone': '', 'type': 'tel'}))
     contact_telegram = forms.CharField(label="Telegram", max_length=64, required=False,
                                        help_text="Можно @ник или ссылку — как удобно.")
     consent = forms.BooleanField(label="Согласен на обработку персональных данных")

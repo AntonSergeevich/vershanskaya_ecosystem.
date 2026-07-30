@@ -15,8 +15,8 @@
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="{% url 'core:landing' %}">
-      <span class="brand-mark">✦</span>
-      <span class="brand-text">Екатерина<br><em>Вершанская</em></span>
+      <span class="brand-mark">✻</span>
+      <span class="brand-text">{{ profile.name }}<em>{{ profile.role }}</em></span>
     </a>
 
     <input type="checkbox" id="nav-toggle" class="nav-toggle">
@@ -67,6 +67,7 @@
   </div>
 </footer>
 
+<script src="{% static 'js/phone.js' %}" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

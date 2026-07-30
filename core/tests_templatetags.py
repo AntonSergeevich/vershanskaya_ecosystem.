@@ -1,6 +1,6 @@
 from django.test import SimpleTestCase
 
-from core.templatetags.ru import counted, plural
+from core.templatetags.ru import counted, emphasis, plural
 
 FORMS = 'урок,урока,уроков'
 
@@ -26,3 +26,19 @@ class PluralTests(SimpleTestCase):
     def test_counted_prepends_the_number(self):
         self.assertEqual(counted(3, FORMS), '3 урока')
         self.assertEqual(counted(1, FORMS), '1 урок')
+
+
+class EmphasisTests(SimpleTestCase):
+    def test_stars_become_em(self):
+        self.assertEqual(emphasis('Понять, *кто вы*'), 'Понять, <em>кто вы</em>')
+
+    def test_html_from_admin_is_escaped(self):
+        """Поле редактируется через админку — сырой HTML туда попасть не должен."""
+        self.assertEqual(emphasis('<script>alert(1)</script>'),
+                         '&lt;script&gt;alert(1)&lt;/script&gt;')
+
+    def test_escaping_happens_before_emphasis(self):
+        self.assertEqual(emphasis('*<b>x</b>*'), '<em>&lt;b&gt;x&lt;/b&gt;</em>')
+
+    def test_empty_value_is_safe(self):
+        self.assertEqual(emphasis(None), '')

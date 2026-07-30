@@ -8,9 +8,54 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
-from core.models import FAQItem, Testimonial
+from core.models import FAQItem, SiteProfile, Testimonial
 
 User = get_user_model()
+
+
+class SiteProfileTests(TestCase):
+    def test_load_creates_and_then_reuses_one_record(self):
+        first = SiteProfile.load()
+        second = SiteProfile.load()
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(SiteProfile.objects.count(), 1)
+
+    def test_saving_a_new_instance_overwrites_the_only_one(self):
+        """Второй профиль означал бы, что часть страниц показывает старое фото."""
+        SiteProfile.load()
+        SiteProfile(name='Другое имя').save()
+        self.assertEqual(SiteProfile.objects.count(), 1)
+        self.assertEqual(SiteProfile.load().name, 'Другое имя')
+
+    def test_landing_shows_the_profile_texts(self):
+        profile = SiteProfile.load()
+        profile.headline = 'Понять, *кто вы*'
+        profile.role = 'Психолог'
+        profile.save()
+
+        response = self.client.get(reverse('core:landing'))
+        self.assertContains(response, '<em>кто вы</em>', html=False)
+        self.assertContains(response, 'Психолог')
+
+    def test_landing_survives_a_missing_portrait(self):
+        """Фото могут загрузить не сразу — страница обязана работать и без него."""
+        response = self.client.get(reverse('core:landing'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'portrait-placeholder')
+
+    def test_admin_profile_page_opens_the_single_record(self):
+        staff = User.objects.create(username='admin', is_staff=True, is_superuser=True)
+        self.client.force_login(staff)
+        response = self.client.get('/admin/core/siteprofile/', follow=True)
+        self.assertEqual(response.status_code, 200)
+
+
+class PhoneWidgetTests(TestCase):
+    def test_phone_inputs_are_marked_for_the_mask(self):
+        """data-phone — единственная связь формы со скриптом маски."""
+        response = self.client.get(reverse('users:enter'))
+        self.assertContains(response, 'data-phone')
+        self.assertContains(response, 'js/phone.js')
 
 
 class PublicPagesTests(TestCase):
@@ -54,6 +99,27 @@ class PublicPagesTests(TestCase):
         self.client.force_login(staff)
         self.assertEqual(self.client.get(reverse('crm:board')).status_code, 200)
         self.assertEqual(self.client.get('/admin/').status_code, 200)
+
+    def test_no_template_syntax_leaks_into_the_html(self):
+        """Многострочный {# … #} Django комментарием не считает.
+
+        Такой «комментарий» молча уезжает на страницу как текст — заметить
+        это можно только глазами, поэтому проверяем автоматически.
+        """
+        pages = [
+            reverse('core:landing'),
+            reverse('lms:courses'),
+            reverse('lms:course', args=['pervye-shagi']),
+            reverse('booking:slots'),
+            reverse('payments:club'),
+            reverse('users:enter'),
+            reverse('quiz:list'),
+        ]
+        for page in pages:
+            with self.subTest(page=page):
+                html = self.client.get(page, follow=True).content.decode()
+                self.assertNotIn('{#', html)
+                self.assertNotIn('{%', html)
 
     def test_landing_shows_seeded_content(self):
         Testimonial.objects.create(author='Марина', text='Очень помогло')

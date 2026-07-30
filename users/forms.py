@@ -63,7 +63,10 @@ class LoginForm(AuthenticationForm):
 class RegisterForm(forms.ModelForm):
     """Регистрация по имени и телефону: минимум полей — меньше отвалов."""
     first_name = forms.CharField(label="Как вас зовут", max_length=150)
+    # data-phone включает маску «+7 (999) 123-45-67» из static/js/phone.js.
+    # Если скрипт не загрузился, сервер всё равно нормализует номер.
     phone = forms.CharField(label="Телефон", max_length=20,
+                            widget=forms.TextInput(attrs={'data-phone': '', 'type': 'tel'}),
                             help_text="Понадобится для входа и связи по разбору.")
     password1 = forms.CharField(label="Пароль", widget=forms.PasswordInput,
                                 min_length=6)

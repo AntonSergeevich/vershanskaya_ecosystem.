@@ -4,9 +4,26 @@
 их три: 1 урок, 2 урока, 5 уроков. Без этого в интерфейсе появляются
 костыли вида «3 урок(ов)».
 """
+import re
+
 from django import template
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
 
 register = template.Library()
+
+EMPHASIS = re.compile(r'\*([^*]+)\*')
+
+
+@register.filter
+def emphasis(text):
+    """*Слово* → <em>Слово</em>.
+
+    Нужно, чтобы Екатерина могла выделить часть заголовка из админки и при
+    этом не могла случайно (или намеренно) вставить в страницу HTML:
+    экранируем всё, а теги добавляем сами.
+    """
+    return mark_safe(EMPHASIS.sub(r'<em>\1</em>', escape(text or '')))
 
 
 @register.filter

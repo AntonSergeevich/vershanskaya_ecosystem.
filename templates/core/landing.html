@@ -5,15 +5,14 @@
 
 {% block content %}
 
-<section class="hero">
+<section class="hero blob-bg">
   <div class="container hero-grid">
     <div>
-      <span class="eyebrow">Психология архетипов</span>
-      <h1>Понять, кто вы,<br>и перестать жить<br>чужую жизнь</h1>
-      <p class="lead">
-        Начнём не с советов, а с вопроса о вас. Семь вопросов — и станет видно,
-        какой архетип ведёт вас сейчас, где вы теряете силы и с чего начинать.
-      </p>
+      <span class="eyebrow">{{ profile.role }}</span>
+      <h1>{{ profile.headline|emphasis }}</h1>
+      <span class="flourish"></span>
+      <p class="lead">{{ profile.lead }}</p>
+
       <div class="hero-actions">
         {% if quiz %}
           <a class="btn" href="{{ quiz.get_absolute_url }}">Узнать свой архетип</a>
@@ -39,20 +38,87 @@
       </div>
     </div>
 
-    <aside class="hero-card">
-      <span class="eyebrow">Как устроен путь</span>
-      <ol>
-        <li><strong>Квиз.</strong> Определяем ведущий архетип — бесплатно и за пять минут.</li>
-        <li><strong>Материалы.</strong> Открываются курсы уровня «Искатель».</li>
-        <li><strong>Разбор.</strong> Полчаса один на один по вашему запросу.</li>
-        <li><strong>Клуб «Творец».</strong> Закрытые встречи, чат и новые практики.</li>
-      </ol>
-    </aside>
+    <div class="portrait-wrap">
+      {% if profile.portrait %}
+        <img class="portrait" src="{{ profile.portrait.url }}"
+             alt="{{ profile.name }}" width="640" height="800">
+      {% else %}
+        {% comment %}
+          Портрет ещё не загружен — держим форму блока, чтобы вёрстка
+          не «прыгала», когда фотография появится.
+        {% endcomment %}
+        <div class="portrait-placeholder">
+          Портрет загружается в админке:<br>«Профиль сайта» → Портрет
+        </div>
+      {% endif %}
+      {% if profile.portrait_note %}
+        <div class="portrait-note">
+          <strong>{{ profile.name }}</strong>
+          {{ profile.portrait_note }}
+        </div>
+      {% endif %}
+    </div>
   </div>
 </section>
 
-{% if free_courses %}
+<section class="section section-sand">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">Как устроен путь</span>
+      <h2>Четыре шага, а не «курс на год»</h2>
+      <span class="flourish flourish-center"></span>
+    </div>
+    <ol class="step-list">
+      <li class="step-item">
+        <div>
+          <h3>Квиз</h3>
+          <p>Семь вопросов — и понятно, какой архетип ведёт вас сейчас. Бесплатно.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <div>
+          <h3>Материалы</h3>
+          <p>Открываются курсы уровня «Искатель» — можно начать в тот же вечер.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <div>
+          <h3>Разбор</h3>
+          <p>Полчаса один на один по вашему запросу, без общих слов.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <div>
+          <h3>Клуб «Творец»</h3>
+          <p>Закрытые встречи, чат и новые практики каждый месяц.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+{% if profile.about_text %}
 <section class="section">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:center;gap:56px">
+      {% if profile.about_photo %}
+        <img class="portrait" src="{{ profile.about_photo.url }}"
+             alt="{{ profile.name }}" width="560" height="700">
+      {% endif %}
+      <div>
+        <span class="eyebrow">Обо мне</span>
+        <h2>{{ profile.about_title }}</h2>
+        <span class="flourish"></span>
+        <p class="soft" style="font-size:1.06rem">{{ profile.about_text|linebreaksbr }}</p>
+        <a class="btn btn-ghost" href="{% url 'booking:slots' %}">Познакомиться на разборе</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if free_courses %}
+<section class="section {% if not profile.about_text %}section-sand{% endif %}">
   <div class="container">
     <div class="section-head">
       <span class="eyebrow">Уровень «Искатель»</span>
@@ -62,6 +128,9 @@
     <div class="grid grid-3">
       {% for course in free_courses %}
         <a class="card card-link" href="{{ course.get_absolute_url }}">
+          {% if course.cover %}
+            <img class="course-cover" src="{{ course.cover.url }}" alt="" loading="lazy">
+          {% endif %}
           <span class="badge badge-green">Бесплатно</span>
           <h3 style="margin-top:14px">{{ course.title }}</h3>
           <p class="muted">{{ course.description|truncatewords:18 }}</p>
@@ -73,12 +142,13 @@
 </section>
 {% endif %}
 
-<section class="section" style="background:var(--night-2)">
+<section class="section section-sand">
   <div class="container">
-    <div class="grid grid-2" style="align-items:center;gap:48px">
+    <div class="grid grid-2" style="align-items:center;gap:56px">
       <div>
         <span class="eyebrow">Закрытый клуб</span>
         <h2>«Творец» — для тех,<br>кто уже начал</h2>
+        <span class="flourish"></span>
         <p class="soft">
           Клуб — это не ещё один курс, а среда. Разборы в прямом эфире, чат, где
           отвечают, и новые материалы каждый месяц. Уходить можно в любой момент:
@@ -109,13 +179,17 @@
 {% if testimonials %}
 <section class="section">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head center">
       <span class="eyebrow">Отзывы</span>
       <h2>Что меняется у участниц</h2>
+      <span class="flourish flourish-center"></span>
     </div>
     <div class="grid grid-3">
       {% for item in testimonials %}
         <figure class="card" style="margin:0">
+          {% if item.photo %}
+            <img class="quote-avatar" src="{{ item.photo.url }}" alt="" loading="lazy">
+          {% endif %}
           <blockquote class="quote" style="margin:0">{{ item.text }}</blockquote>
           <figcaption class="quote-author">
             {{ item.author }}{% if item.role %} — {{ item.role }}{% endif %}
@@ -131,6 +205,7 @@
 <section class="section-tight">
   <div class="container narrow">
     <h2 class="center">Частые вопросы</h2>
+    <span class="flourish flourish-center"></span>
     {% for item in faq %}
       <details class="faq-item">
         <summary>{{ item.question }}</summary>
@@ -143,6 +218,7 @@
 
 <section class="section">
   <div class="container narrow center">
+    <div class="archetype-crest">✻</div>
     <h2>С чего начать?</h2>
     <p class="soft">
       С квиза. Он бесплатный, занимает пять минут и сразу показывает, какой

@@ -149,15 +149,21 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        # verbosity=0 используют тесты — команда не должна засорять их вывод.
+        self.quiet = not options['verbosity']
         self._create_quiz()
         self._create_courses()
         self._create_content()
 
         if options['with_slots']:
-            call_command('generate_slots', days=14)
+            call_command('generate_slots', days=14, verbosity=options['verbosity'])
 
-        self.stdout.write(self.style.SUCCESS(
+        self.say(self.style.SUCCESS(
             "Демо-контент готов. Загляните на главную страницу."))
+
+    def say(self, message):
+        if not self.quiet:
+            self.stdout.write(message)
 
     def _create_quiz(self):
         quiz, created = Quiz.objects.get_or_create(
@@ -170,7 +176,7 @@ class Command(BaseCommand):
                          'говорить о себе.',
             })
         if not created:
-            self.stdout.write("Квиз уже был — пропускаю.")
+            self.say("Квиз уже был — пропускаю.")
             return
 
         for index, (text, subtitle, options) in enumerate(QUESTIONS, start=1):
@@ -179,7 +185,7 @@ class Command(BaseCommand):
             for position, (option_text, archetype) in enumerate(options, start=1):
                 Option.objects.create(question=question, text=option_text,
                                       archetype=archetype, order=position)
-        self.stdout.write(f"Создан квиз «{quiz.title}» с {len(QUESTIONS)} вопросами.")
+        self.say(f"Создан квиз «{quiz.title}» с {len(QUESTIONS)} вопросами.")
 
     def _create_courses(self):
         for spec in COURSES:
@@ -211,7 +217,7 @@ class Command(BaseCommand):
                                           order=order, duration_minutes=20,
                                           content='Материалы урока появятся здесь.')
 
-            self.stdout.write(f"Создан курс «{course.title}».")
+            self.say(f"Создан курс «{course.title}».")
 
     def _create_content(self):
         for order, (author, role, text) in enumerate(TESTIMONIALS, start=1):

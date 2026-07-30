@@ -75,5 +75,6 @@ class Command(BaseCommand):
                 skipped += int(not is_new)
                 cursor += duration
 
-        self.stdout.write(self.style.SUCCESS(
-            f"Создано окон: {created}. Уже существовало: {skipped}."))
+        if options['verbosity']:
+            self.stdout.write(self.style.SUCCESS(
+                f"Создано окон: {created}. Уже существовало: {skipped}."))
