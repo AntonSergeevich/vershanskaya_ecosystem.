@@ -4,8 +4,22 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from core.services.analytics import dashboard_data
+from core.services.insights import ai_enabled, insights
+
 from . import services
 from .models import CRMLead
+
+
+@staff_member_required
+def analytics(request):
+    """Кабинет Екатерины: деньги, клуб, воронка и разборы на одной странице."""
+    data = dashboard_data()
+    return render(request, 'crm/analytics.html', {
+        **data,
+        'insights': insights(data),
+        'ai_enabled': ai_enabled(),
+    })
 
 
 @staff_member_required

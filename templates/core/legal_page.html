@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title }} — {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ page.summary|default:page.title }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    {% if not page.is_published %}
+      <div class="message message-warning">
+        Черновик. Посетители этой страницы не видят — опубликуйте её в админке,
+        когда текст согласован.
+      </div>
+    {% endif %}
+
+    <span class="eyebrow">Документы</span>
+    <h1>{{ page.title }}</h1>
+    {% if page.summary %}<p class="soft">{{ page.summary }}</p>{% endif %}
+    <span class="flourish"></span>
+
+    <div class="legal-text">{{ page.rendered_body|linebreaks }}</div>
+
+    <p class="muted" style="margin-top:40px;font-size:.87rem">
+      Редакция от {{ page.updated_at|date:"d.m.Y" }}.
+      Вопросы — {{ legal.email|default:"по контактам в подвале" }}.
+    </p>
+  </div>
+</section>
+{% endblock %}

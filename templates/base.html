@@ -28,7 +28,10 @@
       <a href="{% url 'payments:club' %}">Клуб</a>
       <a href="{% url 'booking:slots' %}">Разбор</a>
       {% if user.is_authenticated %}
-        {% if user.is_staff %}<a href="{% url 'crm:board' %}">Воронка</a>{% endif %}
+        {% if user.is_staff %}
+          <a href="{% url 'crm:analytics' %}">Дела</a>
+          <a href="{% url 'crm:board' %}">Воронка</a>
+        {% endif %}
         <a href="{% url 'lms:dashboard' %}">Кабинет</a>
         <form action="{% url 'users:logout' %}" method="post" class="nav-logout">
           {% csrf_token %}
@@ -64,10 +67,21 @@
       <a href="{{ INSTAGRAM_URL }}" rel="noopener" target="_blank">Instagram</a>
       <a href="{% url 'booking:slots' %}">Записаться на разбор</a>
     </nav>
+    <nav class="footer-links footer-legal">
+      {% for page in footer_legal %}
+        <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>
+      {% endfor %}
+      <a href="{% url 'core:requisites' %}">Реквизиты</a>
+    </nav>
   </div>
 </footer>
 
+{% if show_cookie_banner %}
+  {% include 'includes/_cookie_banner.html' %}
+{% endif %}
+
 <script src="{% static 'js/phone.js' %}" defer></script>
+<script src="{% static 'js/cookie.js' %}" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

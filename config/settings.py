@@ -170,6 +170,10 @@ TELEGRAM_ADMIN_CHAT_ID = os.getenv('TELEGRAM_ADMIN_CHAT_ID', '')
 TELEGRAM_CHANNEL_URL = os.getenv('TELEGRAM_CHANNEL_URL', 'https://t.me/ekaterinavershanskaya')
 INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/ekaterina_arhetypes/')
 
+# Разбор цифр в кабинете. Без ключа выводы считаются по правилам —
+# кабинет работает и без ИИ.
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+
 PAYMENT_PROVIDER = os.getenv('PAYMENT_PROVIDER', 'yookassa')
 YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID', '')
 YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY', '')

@@ -1,0 +1,16 @@
+{% comment %}
+  Уведомление о куках. Появляется, пока в куке cookie_consent нет «yes».
+  Сайт не ставит рекламных и аналитических кук — только сессию и защиту от
+  CSRF, поэтому кнопка одна: человеку нужно сообщить, а не спросить
+  разрешения на то, без чего вход не работает.
+{% endcomment %}
+<div class="cookie-banner" id="cookie-banner" role="region" aria-label="Об использовании cookie">
+  <p class="cookie-text">
+    Сайт использует cookie — они нужны, чтобы вы оставались в аккаунте и чтобы
+    формы были защищены. Рекламных и следящих cookie здесь нет.
+    {% if privacy_page %}
+      <a href="{{ privacy_page.get_absolute_url }}">Подробнее в политике</a>.
+    {% endif %}
+  </p>
+  <button class="btn btn-small" type="button" id="cookie-accept">Понятно</button>
+</div>

@@ -1,10 +1,11 @@
 from django.conf import settings
-from django.shortcuts import render
+from django.http import Http404
+from django.shortcuts import get_object_or_404, render
 
 from lms.models import Course
 from quiz.models import Quiz
 
-from .models import FAQItem, Testimonial
+from .models import FAQItem, LegalInfo, LegalPage, Testimonial
 
 
 def landing(request):
@@ -20,4 +21,27 @@ def landing(request):
         'testimonials': Testimonial.objects.filter(is_published=True)[:6],
         'faq': FAQItem.objects.filter(is_published=True),
         'price': settings.CLUB_PRICE,
+    })
+
+
+def legal_page(request, slug):
+    """Оферта, политика и прочие документы.
+
+    Черновик показываем только сотрудникам: неготовый текст оферты на
+    публичной странице хуже, чем её отсутствие.
+    """
+    page = get_object_or_404(LegalPage, slug=slug)
+    if not page.is_published and not request.user.is_staff:
+        raise Http404
+
+    return render(request, 'core/legal_page.html', {
+        'page': page,
+        'legal': LegalInfo.load(),
+    })
+
+
+def requisites(request):
+    """Реквизиты продавца — отдельной страницей, её просит эквайринг."""
+    return render(request, 'core/requisites.html', {
+        'legal': LegalInfo.load(),
     })

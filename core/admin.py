@@ -3,7 +3,34 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import FAQItem, SiteProfile, Testimonial
+from .models import FAQItem, LegalInfo, LegalPage, SiteProfile, Testimonial
+
+
+@admin.register(LegalInfo)
+class LegalInfoAdmin(admin.ModelAdmin):
+    """Реквизиты — тоже одна запись на весь сайт."""
+    fieldsets = (
+        ('Продавец', {'fields': ('entity_type', 'legal_name', 'inn', 'ogrn', 'address')}),
+        ('Контакты', {'fields': ('email', 'phone', 'site_url')}),
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect(reverse('admin:core_legalinfo_change', args=[LegalInfo.load().pk]))
+
+
+@admin.register(LegalPage)
+class LegalPageAdmin(admin.ModelAdmin):
+    list_display = ['title', 'slug', 'is_published', 'show_in_footer', 'order', 'updated_at']
+    list_filter = ['is_published']
+    list_editable = ['is_published', 'show_in_footer', 'order']
+    prepopulated_fields = {'slug': ('title',)}
+    search_fields = ['title', 'body']
 
 
 @admin.register(SiteProfile)

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load ru humanize l10n %}
+
+{% block title %}Кабинет — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <span class="eyebrow">Кабинет</span>
+    <h1>Как идут дела</h1>
+    <p class="soft">
+      <a href="{% url 'crm:board' %}">Перейти к воронке →</a>
+    </p>
+
+    {# --- Главные цифры --- #}
+    <div class="grid grid-3" style="margin-top:34px">
+      <div class="card metric">
+        <span class="metric-label">Выручка за 30 дней</span>
+        <span class="metric-value">{{ money.revenue_30|floatformat:0|intcomma }} ₽</span>
+        {% if money.delta_percent is not None %}
+          <span class="metric-delta {% if money.delta_percent >= 0 %}is-up{% else %}is-down{% endif %}">
+            {% if money.delta_percent >= 0 %}↑{% else %}↓{% endif %}
+            {{ money.delta_percent }}% к прошлым 30 дням
+          </span>
+        {% else %}
+          <span class="metric-delta muted">сравнивать пока не с чем</span>
+        {% endif %}
+      </div>
+
+      <div class="card metric">
+        <span class="metric-label">Оплат за 30 дней</span>
+        <span class="metric-value">{{ money.payments_30 }}</span>
+        <span class="metric-delta muted">
+          средний чек {{ money.average_check|intcomma }} ₽
+        </span>
+      </div>
+
+      <div class="card metric">
+        <span class="metric-label">В клубе сейчас</span>
+        <span class="metric-value">{{ club.active }}</span>
+        <span class="metric-delta {% if club.leaving %}is-down{% else %}muted{% endif %}">
+          {% if club.leaving %}
+            {{ club.leaving|counted:"человек отключил,человека отключили,человек отключили" }} продление
+          {% else %}
+            +{{ club.new_30 }} за месяц, −{{ club.canceled_30 }}
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    {# --- Выводы --- #}
+    <div class="card" style="margin-top:24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
+        <h3 style="margin:0">Что видно по цифрам</h3>
+        <span class="badge {% if insights.by_ai %}badge-gold{% else %}badge-muted{% endif %}">
+          {% if insights.by_ai %}разбор ИИ{% else %}по правилам{% endif %}
+        </span>
+      </div>
+      <ul class="feature-list" style="margin-bottom:0">
+        {% for note in insights.notes %}
+          <li>{{ note }}</li>
+        {% empty %}
+          <li>Пока мало данных, чтобы делать выводы.</li>
+        {% endfor %}
+      </ul>
+      {% if not ai_enabled %}
+        <p class="muted" style="font-size:.84rem;margin:14px 0 0">
+          Выводы посчитаны по правилам. Чтобы их писал ИИ, добавьте
+          <code>ANTHROPIC_API_KEY</code> в <code>.env</code>.
+        </p>
+      {% endif %}
+    </div>
+
+    {# --- График выручки --- #}
+    <h2 style="margin-top:56px">Выручка по месяцам</h2>
+    {% if chart.bars %}
+      <div class="card chart-card">
+        <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
+             preserveAspectRatio="none" role="img"
+             aria-label="График выручки по месяцам">
+          <polygon points="{{ chart.area }}" fill="rgba(140,155,126,.16)"/>
+          <polyline points="{{ chart.points }}" fill="none"
+                    stroke="#8c9b7e" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+          {% comment %}
+            localize off обязателен: русская локаль пишет дробные числа через
+            запятую, и координата «0,0» ломает SVG молча — точки просто
+            не рисуются.
+          {% endcomment %}
+          {% localize off %}
+            {% for bar in chart.bars %}
+              <circle cx="{{ bar.x }}" cy="{{ bar.y }}" r="4" fill="#c4836a"/>
+            {% endfor %}
+          {% endlocalize %}
+        </svg>
+        <div class="chart-axis">
+          {% for bar in chart.bars %}
+            <span>
+              <strong>{{ bar.total|floatformat:0|intcomma }} ₽</strong>
+              {{ bar.month|date:"M Y" }}
+            </span>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="empty">Оплат пока не было — график появится после первой.</div>
+    {% endif %}
+
+    {# --- Воронка и разборы --- #}
+    <div class="grid grid-2" style="margin-top:44px;align-items:start">
+      <div class="card">
+        <h3>Воронка</h3>
+        <table class="table">
+          <tr><th>Начали квиз</th><td>{{ funnel.attempts }}</td></tr>
+          <tr><th>Дошли до результата</th>
+              <td>{{ funnel.completed }} ({{ funnel.quiz_conversion }}%)</td></tr>
+          <tr><th>Всего лидов</th><td>{{ funnel.leads }}</td></tr>
+          <tr><th>Оформили подписку</th>
+              <td>{{ funnel.subscribed }} ({{ funnel.lead_to_client }}%)</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Разборы</h3>
+        <table class="table">
+          <tr><th>Впереди</th><td>{{ booking.upcoming }}</td></tr>
+          <tr><th>Проведено за 30 дней</th><td>{{ booking.done_30 }}</td></tr>
+          <tr><th>Отменено за 30 дней</th><td>{{ booking.canceled_30 }}</td></tr>
+        </table>
+        <h3 style="margin-top:26px">Клуб</h3>
+        <table class="table">
+          <tr><th>Новых за 30 дней</th><td>{{ club.new_30 }}</td></tr>
+          <tr><th>Отписок за 30 дней</th><td>{{ club.canceled_30 }}</td></tr>
+          <tr><th>Заканчивается на неделе</th><td>{{ club.expiring_week }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top:34px;font-size:.86rem">
+      Всего заработано за всё время: {{ money.total|floatformat:0|intcomma }} ₽.
+    </p>
+
+  </div>
+</section>
+{% endblock %}

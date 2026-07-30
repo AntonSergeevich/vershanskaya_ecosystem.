@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Реквизиты — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <span class="eyebrow">Документы</span>
+    <h1>Реквизиты</h1>
+    <span class="flourish"></span>
+
+    {% if legal.is_filled %}
+      <div class="card">
+        <table class="table">
+          <tr><th>Форма</th><td>{{ legal.get_entity_type_display }}</td></tr>
+          <tr><th>Наименование</th><td>{{ legal.legal_name }}</td></tr>
+          <tr><th>ИНН</th><td>{{ legal.inn }}</td></tr>
+          {% if legal.ogrn %}<tr><th>ОГРН / ОГРНИП</th><td>{{ legal.ogrn }}</td></tr>{% endif %}
+          {% if legal.address %}<tr><th>Адрес</th><td>{{ legal.address }}</td></tr>{% endif %}
+          {% if legal.email %}
+            <tr><th>Email</th><td><a href="mailto:{{ legal.email }}">{{ legal.email }}</a></td></tr>
+          {% endif %}
+          {% if legal.phone %}
+            <tr><th>Телефон</th><td><a href="tel:{{ legal.phone }}">{{ legal.phone }}</a></td></tr>
+          {% endif %}
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <p>Реквизиты пока не заполнены.</p>
+        {% if user.is_staff %}
+          <p class="muted">Админка → Реквизиты. Без них эквайринг не пройдёт модерацию.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <p class="muted" style="margin-top:34px">
+      По любым вопросам об оплате и доступе пишите в
+      <a href="{{ TELEGRAM_CHANNEL_URL }}" target="_blank" rel="noopener">Telegram</a>{% if legal.email %}
+      или на <a href="mailto:{{ legal.email }}">{{ legal.email }}</a>{% endif %} —
+      отвечаем в течение рабочего дня.
+    </p>
+  </div>
+</section>
+{% endblock %}

@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from core.models import FAQItem, Testimonial
+from core.services import telegram
 from lms.models import Course
 
 from . import services
@@ -141,6 +142,12 @@ def cancel_subscription(request):
         messages.info(request, "Активной подписки нет.")
     else:
         subscription.cancel()
+        # Отмена — это сигнал к действию: человек ещё внутри, и с ним
+        # можно поговорить до конца оплаченного периода.
+        telegram.notify_admins(
+            f"⚠️ <b>Отключено продление</b>\n{request.user.display_name}\n"
+            f"Телефон: {request.user.phone or '—'}\n"
+            f"Клуб открыт до {subscription.next_billing_date:%d.%m.%Y}")
         messages.success(
             request,
             "Автопродление отключено. Клуб остаётся открытым до "

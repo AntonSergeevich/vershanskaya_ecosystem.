@@ -37,8 +37,13 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Страница не должна ездить вбок ни при какой ширине. Если что-то всё же
+   вылезет, вылезет оно молча, а не оторвёт вёрстку вправо. */
+html { overflow-x: hidden; }
+
 body {
   margin: 0;
+  overflow-x: hidden;
   background: var(--cream);
   color: var(--ink);
   font-family: var(--sans);
@@ -212,10 +217,12 @@ a:hover { color: var(--clay); }
 .card-link:hover { color: inherit; transform: translateY(-4px); box-shadow: var(--shadow); }
 
 .grid { display: grid; gap: 24px; }
-.grid-2 { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+/* min(…, 100%) обязателен: без него трек не может стать уже своего минимума,
+   и на узком экране сетка вылезает за край страницы. */
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); }
 /* auto-fill, а не auto-fit: одна карточка в ряду должна остаться карточкой,
    а не растянуться во всю ширину. */
-.grid-3 { grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fill, minmax(min(268px, 100%), 1fr)); }
 
 .badge {
   display: inline-block;
@@ -291,7 +298,7 @@ a:hover { color: var(--clay); }
   display: grid; gap: 18px;
   /* Ровно 2×2 на широком экране: четыре шага в один ряд читаются как
      список дел, а квадратом — как спокойный путь. */
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
   counter-reset: step; list-style: none; margin: 0; padding: 0;
 }
 .step-item {
@@ -590,6 +597,29 @@ textarea { min-height: 116px; resize: vertical; }
 .lead-card a { color: var(--ink); }
 .lead-card .lead-meta { color: var(--ink-muted); font-size: .79rem; margin-top: 5px; }
 
+/* --- Метрики и график в кабинете ------------------------------------------- */
+
+.metric { display: flex; flex-direction: column; gap: 6px; }
+.metric-label {
+  font-size: .78rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.metric-value { font-family: var(--serif); font-size: 2.4rem; line-height: 1.05; }
+.metric-delta { font-size: .86rem; color: var(--ink-muted); }
+.metric-delta.is-up { color: var(--sage-deep); }
+.metric-delta.is-down { color: var(--clay); }
+
+.chart-card { padding-bottom: 20px; }
+.chart { display: block; width: 100%; height: 190px; overflow: visible; }
+.chart-axis {
+  display: flex; justify-content: space-between; gap: 10px;
+  margin-top: 14px; font-size: .78rem; color: var(--ink-muted);
+  /* Месяцев может быть много — пусть ось скроллится, а не ломает карточку. */
+  overflow-x: auto;
+}
+.chart-axis span { display: flex; flex-direction: column; text-align: center; flex: none; }
+.chart-axis strong { color: var(--ink); font-weight: 500; }
+
 .table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .table th, .table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); }
 .table th {
@@ -604,6 +634,34 @@ textarea { min-height: 116px; resize: vertical; }
   border-radius: var(--radius);
   padding: 48px 30px; text-align: center; color: var(--ink-muted);
 }
+
+/* --- Правовые документы ----------------------------------------------------- */
+
+.legal-text {
+  font-size: .97rem;
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+.legal-text p { margin-bottom: 1.1em; }
+
+/* --- Уведомление о cookie ---------------------------------------------------- */
+
+.cookie-banner {
+  position: fixed;
+  left: 20px; right: 20px; bottom: 20px;
+  z-index: 40;
+  max-width: 660px; margin-inline: auto;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 18px 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.cookie-text { margin: 0; flex: 1 1 260px; font-size: .88rem; color: var(--ink-soft); }
+.cookie-banner .btn { flex: none; }
+
+.footer-legal a { color: var(--ink-muted); }
 
 /* --- Подвал ---------------------------------------------------------------- */
 
