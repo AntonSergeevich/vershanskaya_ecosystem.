@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Воронка — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section-tight">
+  <div class="container" style="max-width:1400px">
+    <span class="eyebrow">CRM</span>
+    <h1 style="font-size:2rem">Воронка продаж</h1>
+    <p class="soft">
+      Всего лидов: {{ stats.total }}. Дошли до подписки: {{ stats.conversion }}%.
+      Карточку можно перетащить в другую колонку.
+    </p>
+
+    <div class="board">
+      {% for column in columns %}
+        <div class="board-column" data-stage="{{ column.code }}">
+          <h3>{{ column.title }} <span class="board-count">{{ column.leads|length }}</span></h3>
+          {% for lead in column.leads %}
+            <div class="lead-card" draggable="true"
+                 data-move-url="{% url 'crm:move_lead' lead.pk %}">
+              <a href="{% url 'crm:lead' lead.pk %}">{{ lead.user.display_name }}</a>
+              <div class="lead-meta">
+                {{ lead.user.phone|default:"без телефона" }}
+                {% if lead.user.archetype %} · {{ lead.user.archetype_label }}{% endif %}
+              </div>
+              <div class="lead-meta">{{ lead.source }} · {{ lead.updated_at|date:"d.m" }}</div>
+            </div>
+          {% empty %}
+            <p class="muted" style="font-size:.85rem">Пусто</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+// Перетаскивание карточек. Без скрипта доска остаётся читаемой — этап
+// всегда можно поменять в карточке лида или в админке.
+(function () {
+  const csrf = document.cookie.match(/csrftoken=([^;]+)/);
+  let dragged = null;
+
+  document.querySelectorAll('.lead-card').forEach(card => {
+    card.addEventListener('dragstart', () => {
+      dragged = card;
+      card.classList.add('is-dragging');
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      dragged = null;
+    });
+  });
+
+  document.querySelectorAll('.board-column').forEach(column => {
+    column.addEventListener('dragover', event => {
+      event.preventDefault();
+      column.classList.add('is-target');
+    });
+    column.addEventListener('dragleave', () => column.classList.remove('is-target'));
+
+    column.addEventListener('drop', event => {
+      event.preventDefault();
+      column.classList.remove('is-target');
+      if (!dragged) return;
+
+      const card = dragged;
+      const stage = column.dataset.stage;
+      const body = new FormData();
+      body.append('stage', stage);
+      if (csrf) body.append('csrfmiddlewaretoken', csrf[1]);
+
+      fetch(card.dataset.moveUrl, {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        body: body,
+      })
+        .then(response => response.json())
+        .then(data => { if (data.moved) column.appendChild(card); })
+        .catch(() => window.location.reload());
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lesson.title }} — доступ закрыт{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow center">
+    <div class="archetype-crest">🔒</div>
+    <span class="eyebrow">{{ course.title }}</span>
+    <h1 style="font-size:2rem">{{ lesson.title }}</h1>
+    <p class="soft">{{ locked_reason }}</p>
+
+    <div class="hero-actions" style="justify-content:center">
+      {% if not user.is_authenticated %}
+        <a class="btn" href="{% url 'users:enter' %}?next={{ request.path|urlencode }}">Войти</a>
+      {% elif course.access_level == 'mage' %}
+        <a class="btn" href="{% url 'booking:slots' %}">Записаться на разбор</a>
+      {% else %}
+        <a class="btn" href="{% url 'payments:club' %}">Открыть доступ</a>
+      {% endif %}
+      <a class="btn btn-ghost" href="{{ course.get_absolute_url }}">К программе курса</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}Квизы — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <span class="eyebrow">Квизы</span>
+    <h1>Начните с вопроса о себе</h1>
+    <div class="grid" style="margin-top:30px">
+      {% for quiz in quizzes %}
+        <a class="card card-link" href="{{ quiz.get_absolute_url }}">
+          <h3>{{ quiz.title }}</h3>
+          <p class="muted">{{ quiz.intro|truncatewords:24 }}</p>
+          <p class="muted" style="margin:0">{{ quiz.question_count|counted:"вопрос,вопроса,вопросов" }}</p>
+        </a>
+      {% empty %}
+        <div class="empty">Квизы ещё готовятся. Загляните чуть позже.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

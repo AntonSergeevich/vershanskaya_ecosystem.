@@ -1,0 +1,72 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}Архетипы, разборы и закрытый клуб «Творец» — пространство Екатерины Вершанской.{% endblock %}">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+<a class="skip-link" href="#main">К основному содержимому</a>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{% url 'core:landing' %}">
+      <span class="brand-mark">✦</span>
+      <span class="brand-text">Екатерина<br><em>Вершанская</em></span>
+    </a>
+
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <label for="nav-toggle" class="nav-toggle-label" aria-label="Меню"><span></span></label>
+
+    <nav class="site-nav">
+      <a href="{% url 'quiz:list' %}">Квиз</a>
+      <a href="{% url 'lms:courses' %}">Курсы</a>
+      <a href="{% url 'payments:club' %}">Клуб</a>
+      <a href="{% url 'booking:slots' %}">Разбор</a>
+      {% if user.is_authenticated %}
+        {% if user.is_staff %}<a href="{% url 'crm:board' %}">Воронка</a>{% endif %}
+        <a href="{% url 'lms:dashboard' %}">Кабинет</a>
+        <form action="{% url 'users:logout' %}" method="post" class="nav-logout">
+          {% csrf_token %}
+          <button type="submit" class="link-button">Выйти</button>
+        </form>
+      {% else %}
+        <a class="btn btn-small" href="{% url 'users:enter' %}">Войти</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+{% if messages %}
+  <div class="container messages">
+    {% for message in messages %}
+      <div class="message message-{{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<main id="main">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div>
+      <p class="footer-brand">{{ SITE_NAME }}</p>
+      <p class="muted">Архетипы, разборы и закрытый клуб «Творец».</p>
+    </div>
+    <nav class="footer-links">
+      <a href="{{ TELEGRAM_CHANNEL_URL }}" rel="noopener" target="_blank">Telegram</a>
+      <a href="{{ INSTAGRAM_URL }}" rel="noopener" target="_blank">Instagram</a>
+      <a href="{% url 'booking:slots' %}">Записаться на разбор</a>
+    </nav>
+  </div>
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

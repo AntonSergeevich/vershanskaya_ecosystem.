@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <span class="eyebrow">Личный кабинет</span>
+    <h1>{{ user.display_name }}</h1>
+    <p>
+      <span class="badge badge-gold">{{ user.tier_label }}</span>
+      {% if user.archetype %}<span class="badge">Архетип: {{ user.archetype_label }}</span>{% endif %}
+    </p>
+
+    <div class="grid grid-2" style="margin-top:34px;align-items:start">
+
+      <div class="card">
+        <h3>Данные профиля</h3>
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+            {% include 'includes/_form_field.html' with field=field %}
+          {% endfor %}
+          <p class="muted" style="font-size:.88rem">
+            Телефон {{ user.phone|default:'не указан' }} — он же логин, меняется через поддержку.
+          </p>
+          <button class="btn" type="submit">Сохранить</button>
+        </form>
+      </div>
+
+      <div style="display:grid;gap:22px">
+
+        <div class="card">
+          <h3>Подписка на клуб</h3>
+          {% if subscription %}
+            <p class="soft">
+              {% if subscription.status == 'canceled' %}
+                Автопродление отключено. Клуб открыт до
+                <strong>{{ subscription.next_billing_date|date:"d.m.Y" }}</strong>.
+              {% else %}
+                Активна. Следующее списание
+                <strong>{{ subscription.next_billing_date|date:"d.m.Y" }}</strong>
+                — {{ subscription.amount|floatformat:0 }} ₽.
+              {% endif %}
+            </p>
+            {% if subscription.status != 'canceled' %}
+              <form method="post" action="{% url 'payments:cancel_subscription' %}">
+                {% csrf_token %}
+                <button class="btn btn-ghost btn-small" type="submit">Отключить автопродление</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <p class="muted">Подписки нет. В клубе — закрытые разборы, чат и новые материалы.</p>
+            <a class="btn btn-small" href="{% url 'payments:club' %}">Вступить за {{ CLUB_PRICE }} ₽</a>
+          {% endif %}
+        </div>
+
+        <div class="card">
+          <h3>Ближайшие разборы</h3>
+          {% for booking in bookings %}
+            <p style="margin-bottom:8px">
+              <a href="{% url 'booking:detail' booking.pk %}">
+                {{ booking.slot.start_time|date:"d.m.Y, H:i" }}</a>
+              {% if booking.is_canceled %}<span class="badge badge-muted">отменена</span>
+              {% elif booking.is_completed %}<span class="badge badge-green">проведён</span>{% endif %}
+            </p>
+          {% empty %}
+            <p class="muted">Записей пока нет.</p>
+            <a class="btn btn-ghost btn-small" href="{% url 'booking:slots' %}">Выбрать время</a>
+          {% endfor %}
+        </div>
+
+        {% if recent_progress %}
+          <div class="card">
+            <h3>Недавно пройдено</h3>
+            <ul class="lesson-list">
+              {% for item in recent_progress %}
+                <li style="margin-bottom:6px">
+                  <a href="{{ item.lesson.get_absolute_url }}">{{ item.lesson.title }}</a>
+                  <span class="muted">— {{ item.lesson.course.title }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if attempts %}
+          <div class="card">
+            <h3>Пройденные квизы</h3>
+            {% for attempt in attempts %}
+              <p style="margin-bottom:6px">
+                <a href="{% url 'quiz:result' attempt.pk %}">{{ attempt.quiz.title }}</a>
+                <span class="muted">— {{ attempt.result_label }}</span>
+              </p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

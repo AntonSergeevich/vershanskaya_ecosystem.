@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Запись на разбор — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">30 минут один на один</span>
+      <h1>Личный разбор</h1>
+      <p class="soft">
+        Приходите с конкретным запросом — разберём, что происходит сейчас и
+        какой шаг реально сделать. Встреча проходит в Zoom.
+      </p>
+    </div>
+
+    {% if my_bookings %}
+      <div class="card" style="margin-bottom:34px">
+        <h3>Вы уже записаны</h3>
+        {% for booking in my_bookings %}
+          <p style="margin-bottom:6px">
+            <a href="{% url 'booking:detail' booking.pk %}">
+              {{ booking.slot.start_time|date:"d.m.Y, H:i" }}</a>
+          </p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% for day in days %}
+      <div class="day-block">
+        <div class="day-title">{{ day.date|date:"j E, l" }}</div>
+        <div class="slot-grid">
+          {% for slot in day.slots %}
+            {% if user.is_authenticated %}
+              <form class="slot-form" method="post" action="{% url 'booking:book' slot.pk %}">
+                {% csrf_token %}
+                <button class="slot-button" type="submit">{{ slot.start_time|date:"H:i" }}</button>
+              </form>
+            {% else %}
+              <a class="slot-button" href="{% url 'users:enter' %}?next={{ request.path|urlencode }}">
+                {{ slot.start_time|date:"H:i" }}
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="empty">
+        <p>Свободных окон сейчас нет.</p>
+        <p class="muted">Напишите в Telegram — подберём время вручную.</p>
+        <a class="btn btn-ghost btn-small" href="{{ TELEGRAM_CHANNEL_URL }}" target="_blank" rel="noopener">Написать</a>
+      </div>
+    {% endfor %}
+
+    {% if not user.is_authenticated and days %}
+      <p class="muted">Чтобы записаться, войдите — понадобится телефон для связи.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

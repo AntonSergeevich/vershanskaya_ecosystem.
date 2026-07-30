@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Почти готово — {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container quiz-shell">
+
+  <div class="progress-label">
+    <span>Ответы записаны</span><span>100%</span>
+  </div>
+  <div class="progress"><div class="progress-bar" style="width:100%"></div></div>
+
+  <h1 class="quiz-question">Результат готов</h1>
+  <p class="soft">
+    Осталось понять, кому его показать. Оставьте контакт — откроем результат
+    и пришлём разбор вашего архетипа.
+  </p>
+
+  <form method="post" class="card" style="margin-top:26px" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      {% include 'includes/_form_field.html' with field=field %}
+    {% endfor %}
+    <button class="btn btn-block" type="submit">Показать результат</button>
+  </form>
+
+  <p class="muted center" style="font-size:.85rem;margin-top:18px">
+    Не рассылаем спам. Пишем только по делу и всегда можно отписаться.
+  </p>
+</div>
+{% endblock %}

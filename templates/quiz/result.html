@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Ваш архетип — {{ attempt.result_label }}{% endblock %}
+
+{% block content %}
+<div class="container quiz-shell">
+
+  <div class="center">
+    <div class="archetype-crest">✦</div>
+    <span class="eyebrow">Ваш ведущий архетип</span>
+    <h1>{{ attempt.result_label }}</h1>
+    <p class="soft" style="font-size:1.1rem">{{ attempt.result_description }}</p>
+  </div>
+
+  {% if breakdown %}
+    <div class="card" style="margin-top:34px">
+      <h3>Как распределились ответы</h3>
+      <p class="muted" style="font-size:.9rem">
+        Чистых архетипов не бывает. Вторая и третья строки — то, что тоже
+        в вас звучит.
+      </p>
+      {% for row in breakdown %}
+        <div class="score-row {% if row.is_winner %}is-winner{% endif %}">
+          <span>{{ row.label }}</span>
+          <span class="progress"><span class="progress-bar" style="width: {{ row.percent }}%"></span></span>
+          <span>{{ row.percent }}%</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if quiz.outro %}
+    <div class="card" style="margin-top:22px">
+      <p style="margin:0" class="soft">{{ quiz.outro|linebreaksbr }}</p>
+    </div>
+  {% endif %}
+
+  {% if recommended %}
+    <h2 style="margin-top:44px">С чего начать именно вам</h2>
+    <div class="grid grid-2">
+      {% for course in recommended %}
+        <a class="card card-link" href="{{ course.get_absolute_url }}">
+          <h3>{{ course.title }}</h3>
+          <p class="muted" style="margin:0">{{ course.description|truncatewords:16 }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card center" style="margin-top:34px">
+    <h3>Разобрать результат вживую</h3>
+    <p class="soft">
+      Тридцать минут один на один: что этот архетип означает в вашей ситуации
+      и какой следующий шаг реально сделать.
+    </p>
+    <div class="hero-actions" style="justify-content:center">
+      <a class="btn" href="{% url 'booking:slots' %}">Выбрать время разбора</a>
+      <a class="btn btn-ghost" href="{% url 'lms:courses' %}">Смотреть материалы</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Вопрос {{ number }} из {{ total }} — {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container quiz-shell">
+
+  <div class="progress-label">
+    <span>Вопрос {{ number }} из {{ total }}</span>
+    <span>{{ attempt.progress_percent }}%</span>
+  </div>
+  <div class="progress">
+    <div class="progress-bar" style="width: {{ attempt.progress_percent }}%"></div>
+  </div>
+
+  <h1 class="quiz-question">{{ question.text }}</h1>
+  {% if question.subtitle %}<p class="muted">{{ question.subtitle }}</p>{% endif %}
+
+  {# Каждый вариант — отдельная кнопка отправки: один клик вместо «выбрать и подтвердить». #}
+  <form method="post">
+    {% csrf_token %}
+    <div class="option-list">
+      {% for option in options %}
+        <button class="option" type="submit" name="option" value="{{ option.pk }}">
+          {{ option.text }}
+        </button>
+      {% endfor %}
+    </div>
+  </form>
+
+  <p class="muted center" style="font-size:.88rem">
+    Прогресс сохраняется — можно вернуться позже с этого же места.
+  </p>
+</div>
+{% endblock %}

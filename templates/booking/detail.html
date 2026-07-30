@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Запись на {{ booking.slot.start_time|date:"d.m H:i" }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+    <span class="eyebrow">Личный разбор</span>
+    <h1>{{ booking.slot.start_time|date:"j E, H:i" }}</h1>
+
+    {% if booking.is_canceled %}
+      <p><span class="badge badge-muted">Запись отменена</span></p>
+      <a class="btn" href="{% url 'booking:slots' %}">Выбрать другое время</a>
+    {% else %}
+      <div class="card">
+        <p class="soft">
+          Длительность — {{ booking.slot.duration_minutes }} минут.
+          {% if booking.zoom_link %}
+            Ссылка на встречу: <a href="{{ booking.zoom_link }}" target="_blank" rel="noopener">подключиться</a>.
+          {% else %}
+            Ссылку на встречу пришлём ближе к дате.
+          {% endif %}
+        </p>
+        {% if booking.notes %}
+          <p class="muted" style="margin:0"><strong>Ваш запрос:</strong> {{ booking.notes }}</p>
+        {% endif %}
+      </div>
+
+      {% if booking.is_upcoming %}
+        <form method="post" action="{% url 'booking:cancel' booking.pk %}" style="margin-top:22px">
+          {% csrf_token %}
+          <button class="btn btn-ghost btn-small" type="submit">Отменить запись</button>
+        </form>
+      {% elif booking.is_completed %}
+        <p><span class="badge badge-green">Разбор проведён</span></p>
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Лид: {{ lead.user.display_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <p class="muted"><a href="{% url 'crm:board' %}">← К воронке</a></p>
+    <h1 style="font-size:2rem">{{ lead.user.display_name }}</h1>
+    <p>
+      <span class="badge badge-gold">{{ lead.get_stage_display }}</span>
+      <span class="badge">{{ lead.user.tier_label }}</span>
+      {% if lead.user.archetype %}<span class="badge">{{ lead.user.archetype_label }}</span>{% endif %}
+    </p>
+
+    <div class="grid grid-2" style="align-items:start;margin-top:30px">
+
+      <div class="card">
+        <h3>Контакты</h3>
+        <table class="table">
+          <tr><th>Телефон</th><td>{{ lead.user.phone|default:"—" }}</td></tr>
+          <tr><th>Email</th><td>{{ lead.user.email|default:"—" }}</td></tr>
+          <tr><th>Telegram ID</th><td>{{ lead.user.telegram_id|default:"—" }}</td></tr>
+          <tr><th>Источник</th><td>{{ lead.source }}</td></tr>
+          <tr><th>Создан</th><td>{{ lead.created_at|date:"d.m.Y H:i" }}</td></tr>
+        </table>
+
+        <h3 style="margin-top:26px">Этап воронки</h3>
+        <form method="post" action="{% url 'crm:move_lead' lead.pk %}">
+          {% csrf_token %}
+          <div class="form-field">
+            <select name="stage">
+              {% for code, title in stages %}
+                <option value="{{ code }}" {% if code == lead.stage %}selected{% endif %}>{{ title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn btn-small" type="submit">Перенести</button>
+        </form>
+
+        <h3 style="margin-top:26px">Заметки</h3>
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-field">
+            <textarea name="notes">{{ lead.notes|default:'' }}</textarea>
+          </div>
+          <button class="btn btn-small btn-ghost" type="submit">Сохранить заметки</button>
+        </form>
+      </div>
+
+      <div style="display:grid;gap:22px">
+        <div class="card">
+          <h3>Квизы</h3>
+          {% for attempt in attempts %}
+            <p style="margin-bottom:6px">
+              {{ attempt.quiz.title }} — <strong>{{ attempt.result_label|default:"не завершён" }}</strong>
+              <span class="muted">{{ attempt.created_at|date:"d.m.Y" }}</span>
+            </p>
+          {% empty %}<p class="muted">Не проходил.</p>{% endfor %}
+        </div>
+
+        <div class="card">
+          <h3>Разборы</h3>
+          {% for booking in bookings %}
+            <p style="margin-bottom:6px">
+              {{ booking.slot.start_time|date:"d.m.Y H:i" }}
+              {% if booking.is_completed %}<span class="badge badge-green">проведён</span>
+              {% elif booking.is_canceled %}<span class="badge badge-muted">отменён</span>{% endif %}
+            </p>
+          {% empty %}<p class="muted">Записей нет.</p>{% endfor %}
+        </div>
+
+        <div class="card">
+          <h3>Платежи</h3>
+          {% for payment in payments %}
+            <p style="margin-bottom:6px">
+              {{ payment.title }} — {{ payment.amount|floatformat:0 }} ₽
+              <span class="badge {% if payment.is_paid %}badge-green{% else %}badge-muted{% endif %}">
+                {{ payment.get_status_display }}
+              </span>
+            </p>
+          {% empty %}<p class="muted">Оплат нет.</p>{% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

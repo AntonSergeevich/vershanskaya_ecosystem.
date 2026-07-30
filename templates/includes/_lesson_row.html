@@ -1,0 +1,17 @@
+{% comment %}Строка урока в программе курса. item = {lesson, available, completed}{% endcomment %}
+<li class="lesson-row {% if item.completed %}is-done{% endif %} {% if not item.available %}is-locked{% endif %}">
+  <span class="lesson-index">{% if item.completed %}✓{% else %}{{ counter }}{% endif %}</span>
+  <span class="lesson-title">
+    {% if item.available %}
+      <a href="{{ item.lesson.get_absolute_url }}">{{ item.lesson.title }}</a>
+    {% else %}
+      {{ item.lesson.title }}
+    {% endif %}
+    {% if item.lesson.is_preview and not item.available %}
+      <span class="badge badge-green">превью</span>
+    {% endif %}
+  </span>
+  <span class="muted" style="font-size:.85rem">
+    {% if not item.available %}🔒{% elif item.lesson.duration_minutes %}{{ item.lesson.duration_minutes }} мин{% endif %}
+  </span>
+</li>

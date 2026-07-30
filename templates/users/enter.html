@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container form-card">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Личный кабинет</span>
+      <h1 style="font-size:2rem">Рады видеть</h1>
+      <p class="muted">Здесь ваши курсы, разборы и подписка.</p>
+    </div>
+
+    {# Вкладки на радиокнопках: работают без JavaScript. #}
+    <input class="tab-radio" type="radio" name="entry-tab" id="tab-login"
+           {% if active_tab != 'register' %}checked{% endif %}>
+    <input class="tab-radio" type="radio" name="entry-tab" id="tab-register"
+           {% if active_tab == 'register' %}checked{% endif %}>
+
+    <div class="tabs">
+      <label class="tab-label" for="tab-login">Войти</label>
+      <label class="tab-label" for="tab-register">Регистрация</label>
+    </div>
+
+    <div class="tab-panel tab-panel-login">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="login">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        {{ login_form.non_field_errors }}
+        {% for field in login_form %}
+          {% include 'includes/_form_field.html' with field=field %}
+        {% endfor %}
+        <button class="btn btn-block" type="submit">Войти</button>
+      </form>
+    </div>
+
+    <div class="tab-panel tab-panel-register">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="register">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        {{ register_form.non_field_errors }}
+        {% for field in register_form %}
+          {% include 'includes/_form_field.html' with field=field %}
+        {% endfor %}
+        <button class="btn btn-block" type="submit">Создать аккаунт</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение оплаты — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container form-card center">
+    <span class="eyebrow">Режим без эквайринга</span>
+    <h1 style="font-size:1.8rem">Подтвердить оплату</h1>
+
+    <div class="card" style="text-align:left">
+      <p class="soft" style="margin:0">
+        {{ payment.title }}<br>
+        <strong>{{ payment.amount|floatformat:0 }} ₽</strong> · платёж #{{ payment.pk }}
+      </p>
+    </div>
+
+    <p class="muted" style="margin-top:20px;font-size:.9rem">
+      Платёжный шлюз не подключён, поэтому доступ открывается вручную.
+      Так же подтверждаются оплаты переводом.
+    </p>
+
+    <form method="post" style="margin-top:14px">
+      {% csrf_token %}
+      <button class="btn btn-block" type="submit">Подтвердить и открыть доступ</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

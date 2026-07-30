@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }} — {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ course.description|truncatewords:26 }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:start;gap:44px">
+
+      <div>
+        <span class="eyebrow">{{ course.get_access_level_display }}</span>
+        <h1>{{ course.title }}</h1>
+        <p class="soft">{{ course.description|linebreaksbr }}</p>
+
+        {% if available and course.lesson_count %}
+          <div class="progress-label" style="max-width:320px">
+            <span>Пройдено</span><span>{{ progress }}%</span>
+          </div>
+          <div class="progress" style="max-width:320px"><div class="progress-bar" style="width: {{ progress }}%"></div></div>
+        {% endif %}
+
+        <h2 style="margin-top:44px">Программа</h2>
+
+        {% for block in modules %}
+          <h3 style="margin-top:26px">{{ block.module.title }}</h3>
+          {% if block.module.description %}<p class="muted">{{ block.module.description }}</p>{% endif %}
+          <ul class="lesson-list">
+            {% for item in block.lessons %}
+              {% include 'includes/_lesson_row.html' with item=item counter=forloop.counter %}
+            {% endfor %}
+          </ul>
+        {% endfor %}
+
+        {% if loose_lessons %}
+          <ul class="lesson-list">
+            {% for item in loose_lessons %}
+              {% include 'includes/_lesson_row.html' with item=item counter=forloop.counter %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if not modules and not loose_lessons %}
+          <div class="empty">Уроки скоро появятся.</div>
+        {% endif %}
+      </div>
+
+      <aside class="card" style="position:sticky;top:96px">
+        {% if available %}
+          <span class="badge badge-green">Курс открыт</span>
+          <p class="soft" style="margin-top:16px">
+            Все уроки доступны. Прогресс сохраняется автоматически.
+          </p>
+          <a class="btn btn-block" href="{% url 'lms:dashboard' %}">В кабинет</a>
+        {% else %}
+          <span class="badge badge-muted">🔒 Закрыт</span>
+          <p class="soft" style="margin-top:16px">{{ locked_reason }}</p>
+
+          {% if not user.is_authenticated %}
+            <a class="btn btn-block" href="{% url 'users:enter' %}?next={{ request.path|urlencode }}">Войти</a>
+          {% elif course.access_level == 'paid' %}
+            <form method="post" action="{% url 'payments:checkout' %}">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="course">
+              <input type="hidden" name="course" value="{{ course.slug }}">
+              <button class="btn btn-block" type="submit">
+                Купить за {{ course.price|floatformat:0 }} ₽
+              </button>
+            </form>
+            <p class="muted center" style="font-size:.85rem;margin-top:14px">
+              Или входит в подписку клуба — {{ CLUB_PRICE }} ₽/мес.
+            </p>
+            <a class="btn btn-ghost btn-block" href="{% url 'payments:club' %}">Про клуб</a>
+          {% elif course.access_level == 'mage' %}
+            <a class="btn btn-block" href="{% url 'booking:slots' %}">Обсудить на разборе</a>
+          {% else %}
+            <a class="btn btn-block" href="{% url 'payments:club' %}">Вступить в клуб</a>
+          {% endif %}
+        {% endif %}
+      </aside>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

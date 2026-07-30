@@ -1,3 +1,57 @@
-from django.shortcuts import render
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
-# Create your views here.
+from . import services
+from .models import CRMLead
+
+
+@staff_member_required
+def board(request):
+    """Канбан-доска воронки. Только для сотрудников — здесь видны контакты."""
+    return render(request, 'crm/board.html', {
+        'columns': services.board_columns(),
+        'stats': services.funnel_stats(),
+    })
+
+
+@staff_member_required
+@require_POST
+def move_lead(request, pk):
+    """Перенос карточки между колонками.
+
+    Отвечает JSON на fetch от drag-and-drop и редиректом на обычную форму —
+    доска остаётся рабочей даже без JavaScript.
+    """
+    lead = get_object_or_404(CRMLead, pk=pk)
+    moved = services.set_stage(lead, request.POST.get('stage', ''))
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'moved': moved, 'stage': lead.stage})
+
+    if not moved:
+        messages.error(request, "Не удалось перенести карточку.")
+    return redirect('crm:board')
+
+
+@staff_member_required
+def lead_detail(request, pk):
+    """Карточка лида: контакты, архетип, история касаний."""
+    lead = get_object_or_404(CRMLead.objects.select_related('user'), pk=pk)
+
+    if request.method == 'POST':
+        lead.notes = request.POST.get('notes', '').strip()
+        lead.save(update_fields=['notes', 'updated_at'])
+        messages.success(request, "Заметки сохранены.")
+        return redirect('crm:lead', pk=lead.pk)
+
+    user = lead.user
+    return render(request, 'crm/lead_detail.html', {
+        'lead': lead,
+        'attempts': user.quiz_attempts.select_related('quiz')[:5],
+        'bookings': user.bookings.select_related('slot')[:5],
+        'payments': user.payments.all()[:5],
+        'stages': CRMLead.STAGE_CHOICES,
+    })

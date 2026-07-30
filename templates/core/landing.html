@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}{{ SITE_NAME }} — архетипы, разборы и клуб «Творец»{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow">Психология архетипов</span>
+      <h1>Понять, кто вы,<br>и перестать жить<br>чужую жизнь</h1>
+      <p class="lead">
+        Начнём не с советов, а с вопроса о вас. Семь вопросов — и станет видно,
+        какой архетип ведёт вас сейчас, где вы теряете силы и с чего начинать.
+      </p>
+      <div class="hero-actions">
+        {% if quiz %}
+          <a class="btn" href="{{ quiz.get_absolute_url }}">Узнать свой архетип</a>
+        {% else %}
+          <a class="btn" href="{% url 'lms:courses' %}">Смотреть курсы</a>
+        {% endif %}
+        <a class="btn btn-ghost" href="{% url 'booking:slots' %}">Записаться на разбор</a>
+      </div>
+
+      <div class="stat-row">
+        <div>
+          <div class="stat-value">30 мин</div>
+          <div class="stat-label">личный разбор запроса</div>
+        </div>
+        <div>
+          <div class="stat-value">6</div>
+          <div class="stat-label">архетипов в основе метода</div>
+        </div>
+        <div>
+          <div class="stat-value">{{ price }} ₽</div>
+          <div class="stat-label">месяц в клубе «Творец»</div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="hero-card">
+      <span class="eyebrow">Как устроен путь</span>
+      <ol>
+        <li><strong>Квиз.</strong> Определяем ведущий архетип — бесплатно и за пять минут.</li>
+        <li><strong>Материалы.</strong> Открываются курсы уровня «Искатель».</li>
+        <li><strong>Разбор.</strong> Полчаса один на один по вашему запросу.</li>
+        <li><strong>Клуб «Творец».</strong> Закрытые встречи, чат и новые практики.</li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+{% if free_courses %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Уровень «Искатель»</span>
+      <h2>Открыто сразу и бесплатно</h2>
+      <p class="soft">С этих материалов начинают — они не требуют подписки и разбора.</p>
+    </div>
+    <div class="grid grid-3">
+      {% for course in free_courses %}
+        <a class="card card-link" href="{{ course.get_absolute_url }}">
+          <span class="badge badge-green">Бесплатно</span>
+          <h3 style="margin-top:14px">{{ course.title }}</h3>
+          <p class="muted">{{ course.description|truncatewords:18 }}</p>
+          <p class="muted" style="margin:0">{{ course.lesson_count|counted:"урок,урока,уроков" }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section" style="background:var(--night-2)">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:center;gap:48px">
+      <div>
+        <span class="eyebrow">Закрытый клуб</span>
+        <h2>«Творец» — для тех,<br>кто уже начал</h2>
+        <p class="soft">
+          Клуб — это не ещё один курс, а среда. Разборы в прямом эфире, чат, где
+          отвечают, и новые материалы каждый месяц. Уходить можно в любой момент:
+          подписка отменяется в кабинете в один клик.
+        </p>
+        {% if club_courses %}
+          <ul class="feature-list">
+            {% for course in club_courses %}<li>{{ course.title }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+      <div class="card price-card">
+        <span class="eyebrow">Подписка</span>
+        <div class="price-value">{{ price }} ₽</div>
+        <div class="price-period">в месяц, отмена в любой момент</div>
+        <ul class="feature-list">
+          <li>Все клубные курсы и записи разборов</li>
+          <li>Закрытый чат с ответами на вопросы</li>
+          <li>Новые практики каждый месяц</li>
+          <li>Приоритетная запись на личные разборы</li>
+        </ul>
+        <a class="btn btn-block" href="{% url 'payments:club' %}">Узнать про клуб</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if testimonials %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Отзывы</span>
+      <h2>Что меняется у участниц</h2>
+    </div>
+    <div class="grid grid-3">
+      {% for item in testimonials %}
+        <figure class="card" style="margin:0">
+          <blockquote class="quote" style="margin:0">{{ item.text }}</blockquote>
+          <figcaption class="quote-author">
+            {{ item.author }}{% if item.role %} — {{ item.role }}{% endif %}
+          </figcaption>
+        </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if faq %}
+<section class="section-tight">
+  <div class="container narrow">
+    <h2 class="center">Частые вопросы</h2>
+    {% for item in faq %}
+      <details class="faq-item">
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer|linebreaksbr }}</p>
+      </details>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="container narrow center">
+    <h2>С чего начать?</h2>
+    <p class="soft">
+      С квиза. Он бесплатный, занимает пять минут и сразу показывает, какой
+      материал вам сейчас нужен.
+    </p>
+    {% if quiz %}
+      <a class="btn" href="{{ quiz.get_absolute_url }}">Пройти квиз</a>
+    {% else %}
+      <a class="btn" href="{% url 'booking:slots' %}">Записаться на разбор</a>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

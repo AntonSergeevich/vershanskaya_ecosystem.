@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lesson.title }} — {{ course.title }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:900px">
+
+    <p class="muted" style="font-size:.9rem">
+      <a href="{{ course.get_absolute_url }}">{{ course.title }}</a> · урок {{ lesson.order }}
+    </p>
+    <h1 style="font-size:2rem">{{ lesson.title }}</h1>
+
+    <div class="video-frame">
+      {% if lesson.video_file %}
+        {# Ссылка ведёт на вьюху с проверкой доступа, а не на файл напрямую. #}
+        <video controls preload="metadata" controlsList="nodownload"
+               src="{% url 'lms:lesson_video' lesson.pk %}"></video>
+      {% elif lesson.video_url %}
+        <iframe src="{{ lesson.video_url }}" allowfullscreen title="{{ lesson.title }}"></iframe>
+      {% else %}
+        <div class="video-placeholder">
+          <p>У этого урока нет видео — всё в текстовых материалах ниже.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if lesson.content %}
+      <div class="card" style="margin-top:26px">
+        {{ lesson.content|linebreaks }}
+      </div>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+      <div class="card" style="margin-top:26px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center">
+        <div>
+          <strong>{% if progress.is_completed %}Урок пройден{% else %}Отметить как пройденный{% endif %}</strong>
+          <p class="muted" style="margin:0;font-size:.9rem">По курсу пройдено {{ course_progress }}%.</p>
+        </div>
+        {% if progress.is_completed %}
+          <span class="badge badge-green">✓ Готово</span>
+        {% else %}
+          <form method="post" action="{% url 'lms:lesson_complete' course.slug lesson.pk %}">
+            {% csrf_token %}
+            <button class="btn" type="submit">Готово, дальше</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <nav class="lesson-nav">
+      {% if previous_lesson %}
+        <a class="btn btn-ghost btn-small" href="{{ previous_lesson.get_absolute_url }}">← {{ previous_lesson.title|truncatechars:34 }}</a>
+      {% else %}<span></span>{% endif %}
+      {% if next_lesson %}
+        <a class="btn btn-ghost btn-small" href="{{ next_lesson.get_absolute_url }}">{{ next_lesson.title|truncatechars:34 }} →</a>
+      {% endif %}
+    </nav>
+
+  </div>
+</section>
+{% endblock %}

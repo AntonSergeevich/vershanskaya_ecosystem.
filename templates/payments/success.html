@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Оплата — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow center">
+    {% if payment.is_paid %}
+      <div class="archetype-crest">✦</div>
+      <h1>Добро пожаловать</h1>
+      <p class="soft">
+        Оплата прошла: {{ payment.title }} — {{ payment.amount|floatformat:0 }} ₽.
+        {% if payment.kind == 'club' %}
+          Клуб открыт, ссылку в закрытый чат пришлём в Telegram.
+        {% else %}
+          Курс уже доступен в кабинете.
+        {% endif %}
+      </p>
+      <div class="hero-actions" style="justify-content:center">
+        <a class="btn" href="{% url 'lms:dashboard' %}">В кабинет</a>
+        {% if payment.course %}
+          <a class="btn btn-ghost" href="{{ payment.course.get_absolute_url }}">Открыть курс</a>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="archetype-crest">⏳</div>
+      <h1>Ждём подтверждения</h1>
+      <p class="soft">
+        Банк ещё не подтвердил платёж. Обычно это занимает пару минут —
+        обновите страницу. Если деньги списались, а доступ не открылся,
+        напишите нам, разберёмся вручную.
+      </p>
+      <div class="hero-actions" style="justify-content:center">
+        <a class="btn btn-ghost" href="{{ request.path }}">Обновить</a>
+        <a class="btn btn-ghost" href="{{ TELEGRAM_CHANNEL_URL }}" target="_blank" rel="noopener">Написать</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

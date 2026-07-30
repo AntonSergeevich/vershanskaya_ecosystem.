@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Клуб «Творец» — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="grid grid-2" style="align-items:start;gap:48px">
+
+      <div>
+        <span class="eyebrow">Закрытый клуб</span>
+        <h1>«Творец»</h1>
+        <p class="soft" style="font-size:1.08rem">
+          Место, где не нужно объяснять с нуля. Разборы в прямом эфире, чат,
+          где отвечают, и новые практики каждый месяц — для тех, кто уже
+          прошёл первый круг и хочет идти дальше.
+        </p>
+
+        <h2 style="margin-top:40px">Что внутри</h2>
+        <ul class="feature-list">
+          <li>Групповые разборы дважды в месяц — можно молча слушать</li>
+          <li>Все клубные курсы и записи прошлых встреч</li>
+          <li>Закрытый чат: вопрос вечером — ответ утром</li>
+          <li>Практики под ваш архетип</li>
+          <li>Приоритет при записи на личный разбор</li>
+        </ul>
+
+        {% if club_courses %}
+          <h2 style="margin-top:40px">Материалы клуба</h2>
+          <div class="grid grid-2">
+            {% for course in club_courses %}
+              <a class="card card-link" href="{{ course.get_absolute_url }}">
+                <h3 style="font-size:1.05rem">{{ course.title }}</h3>
+                <p class="muted" style="margin:0;font-size:.9rem">{{ course.description|truncatewords:12 }}</p>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <aside class="card price-card" style="position:sticky;top:96px">
+        {% if subscription %}
+          <span class="badge badge-green">Вы в клубе</span>
+          <p class="soft" style="margin-top:18px">
+            Доступ активен до {{ subscription.next_billing_date|date:"d.m.Y" }}.
+          </p>
+          <a class="btn btn-block" href="{% url 'lms:dashboard' %}">В кабинет</a>
+        {% else %}
+          <span class="eyebrow">Подписка</span>
+          <div class="price-value">{{ price }} ₽</div>
+          <div class="price-period">в месяц · отмена в любой момент</div>
+
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'payments:checkout' %}" style="margin-top:26px">
+              {% csrf_token %}
+              <input type="hidden" name="kind" value="club">
+              <button class="btn btn-block" type="submit">Вступить в клуб</button>
+            </form>
+          {% else %}
+            <a class="btn btn-block" style="margin-top:26px"
+               href="{% url 'users:enter' %}?next={% url 'payments:club' %}">Войти и вступить</a>
+          {% endif %}
+
+          <p class="muted" style="font-size:.85rem;margin-top:16px">
+            Оплата картой. Списание раз в месяц, отменить можно в кабинете.
+          </p>
+        {% endif %}
+      </aside>
+
+    </div>
+
+    {% if testimonials %}
+      <h2 style="margin-top:72px">Что говорят участницы</h2>
+      <div class="grid grid-3">
+        {% for item in testimonials %}
+          <figure class="card" style="margin:0">
+            <blockquote class="quote" style="margin:0">{{ item.text }}</blockquote>
+            <figcaption class="quote-author">
+              {{ item.author }}{% if item.role %} — {{ item.role }}{% endif %}
+            </figcaption>
+          </figure>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if faq %}
+      <div class="narrow" style="margin-top:70px">
+        <h2 class="center">Частые вопросы</h2>
+        {% for item in faq %}
+          <details class="faq-item">
+            <summary>{{ item.question }}</summary>
+            <p>{{ item.answer|linebreaksbr }}</p>
+          </details>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

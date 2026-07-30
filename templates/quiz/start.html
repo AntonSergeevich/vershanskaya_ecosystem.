@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}{{ quiz.title }} — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container quiz-shell center">
+  <div class="archetype-crest">✦</div>
+  <span class="eyebrow">{{ quiz.question_count|counted:"вопрос,вопроса,вопросов" }} · около 5 минут</span>
+  <h1>{{ quiz.title }}</h1>
+
+  {% if quiz.intro %}
+    <p class="soft" style="font-size:1.08rem">{{ quiz.intro|linebreaksbr }}</p>
+  {% endif %}
+
+  <form method="post" style="margin-top:30px">
+    {% csrf_token %}
+    <button class="btn" type="submit">Начать</button>
+  </form>
+
+  <p class="muted" style="margin-top:22px;font-size:.9rem">
+    Отвечайте так, как есть сейчас, а не как «надо». Прогресс сохраняется —
+    можно прерваться и вернуться.
+  </p>
+</div>
+{% endblock %}

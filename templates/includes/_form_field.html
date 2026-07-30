@@ -1,0 +1,15 @@
+{% comment %}
+Одно поле формы. Вынесено отдельно, чтобы разметка ошибок и подсказок
+была одинаковой на всех страницах.
+{% endcomment %}
+<div class="form-field {% if field.field.widget.input_type == 'checkbox' %}checkbox-field{% endif %}">
+  {% if field.field.widget.input_type == 'checkbox' %}
+    {{ field }}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {% else %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+  {% endif %}
+  {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+  {{ field.errors }}
+</div>

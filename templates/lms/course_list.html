@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}Курсы — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Материалы</span>
+      <h1>Курсы и практики</h1>
+      <p class="soft">
+        Уровень «Искатель» открыт всем. Клубные материалы входят в подписку
+        «Творец» — {{ CLUB_PRICE }} ₽ в месяц.
+      </p>
+    </div>
+
+    <div class="grid grid-3">
+      {% for item in courses %}
+        <a class="card card-link" href="{{ item.course.get_absolute_url }}">
+          {% if item.course.is_free %}
+            <span class="badge badge-green">Бесплатно</span>
+          {% elif item.available %}
+            <span class="badge badge-green">Открыт</span>
+          {% else %}
+            <span class="badge badge-muted">🔒 {{ item.course.get_access_level_display }}</span>
+          {% endif %}
+          <h3 style="margin-top:14px">{{ item.course.title }}</h3>
+          <p class="muted">{{ item.course.description|truncatewords:20 }}</p>
+          <p class="muted" style="margin:0;font-size:.88rem">
+            {{ item.course.lesson_count|counted:"урок,урока,уроков" }}
+            {% if item.course.access_level == 'paid' %} · {{ item.course.price|floatformat:0 }} ₽{% endif %}
+          </p>
+        </a>
+      {% empty %}
+        <div class="empty">Курсы ещё готовятся.</div>
+      {% endfor %}
+    </div>
+
+    {% if faq %}
+      <div class="narrow" style="margin-top:70px">
+        <h2 class="center">Частые вопросы</h2>
+        {% for item in faq %}
+          <details class="faq-item">
+            <summary>{{ item.question }}</summary>
+            <p>{{ item.answer|linebreaksbr }}</p>
+          </details>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}Кабинет — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <span class="eyebrow">Путь героя</span>
+    <h1>Здравствуйте, {{ user.display_name }}</h1>
+    <p class="soft">
+      Пройдено шагов: {{ path.done_count }} из {{ path.total }}.
+      {% if path.next_step %}Следующий — «{{ path.next_step.title }}».{% else %}Весь путь пройден.{% endif %}
+    </p>
+
+    <div class="progress" style="max-width:420px;margin-bottom:34px">
+      <div class="progress-bar" style="width: {{ path.percent }}%"></div>
+    </div>
+
+    <div class="path">
+      {% for step in path.steps %}
+        <div class="path-step {% if step.done %}is-done{% elif step == path.next_step %}is-next{% endif %}">
+          <span class="path-dot">{% if step.done %}✓{% else %}{{ forloop.counter }}{% endif %}</span>
+          <div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.hint }}</p>
+          </div>
+          {% if not step.done %}
+            <a class="btn btn-small {% if step != path.next_step %}btn-ghost{% endif %}"
+               href="{{ step.url }}">{{ step.action }}</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if continue_lesson %}
+      <div class="card" style="margin-top:34px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">
+        <div>
+          <span class="eyebrow">Продолжить</span>
+          <h3 style="margin:0">{{ continue_lesson.title }}</h3>
+          <p class="muted" style="margin:0">{{ continue_lesson.course.title }}</p>
+        </div>
+        <a class="btn" href="{{ continue_lesson.get_absolute_url }}">Открыть урок</a>
+      </div>
+    {% endif %}
+
+    <h2 style="margin-top:56px">Ваши материалы</h2>
+    <div class="grid grid-3">
+      {% for item in courses %}
+        <a class="card card-link" href="{{ item.course.get_absolute_url }}">
+          {% if item.available %}
+            <span class="badge badge-green">Открыт</span>
+          {% else %}
+            <span class="badge badge-muted">🔒 {{ item.course.get_access_level_display }}</span>
+          {% endif %}
+          <h3 style="margin-top:14px">{{ item.course.title }}</h3>
+          <p class="muted">{{ item.course.description|truncatewords:16 }}</p>
+          {% if item.available and item.course.lesson_count %}
+            <div class="progress-label">
+              <span>{{ item.progress }}% пройдено</span>
+              <span>{{ item.course.lesson_count|counted:"урок,урока,уроков" }}</span>
+            </div>
+            <div class="progress"><div class="progress-bar" style="width: {{ item.progress }}%"></div></div>
+          {% endif %}
+        </a>
+      {% empty %}
+        <div class="empty">Курсы скоро появятся.</div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}
