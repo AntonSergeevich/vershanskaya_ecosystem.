@@ -30,22 +30,31 @@ CREAM = (250, 247, 242)
 SAGE = (140, 155, 126)
 
 
-def crop_to_ratio(image, ratio=0.8, focus=0.38):
-    """Кроп под 4:5.
+def crop_to_ratio(image, ratio=0.8, focus=0.38, focus_x=0.5, zoom=1.0):
+    """Вырезает кадр 4:5.
 
-    Режем не по центру, а ближе к верху (focus): на портретах лицо почти
-    всегда выше середины кадра, и центральный кроп срезает макушку.
+    focus — где резать по вертикали (0 — от самого верха, 1 — от низа). На
+    портретах лицо почти всегда выше середины, и кроп по центру срезает макушку.
+
+    zoom — насколько подойти ближе. Студийные кадры часто сняты с запасом:
+    над головой полкадра воздуха. В круглой рамке на сайте такое лицо выходит
+    мелким, поэтому берём кусок поменьше и растягиваем.
     """
     width, height = image.size
-    target_height = int(width / ratio)
 
-    if target_height <= height:
-        top = int((height - target_height) * focus)
-        return image.crop((0, top, width, top + target_height))
+    # Максимальный прямоугольник нужных пропорций, который влезает в кадр.
+    if width / height > ratio:
+        box_width, box_height = int(height * ratio), height
+    else:
+        box_width, box_height = width, int(width / ratio)
 
-    target_width = int(height * ratio)
-    left = (width - target_width) // 2
-    return image.crop((left, 0, left + target_width, height))
+    box_width = max(1, int(box_width / zoom))
+    box_height = max(1, int(box_height / zoom))
+
+    # Сдвигаем окно, оставаясь внутри картинки.
+    left = int((width - box_width) * min(max(focus_x, 0), 1))
+    top = int((height - box_height) * min(max(focus, 0), 1))
+    return image.crop((left, top, left + box_width, top + box_height))
 
 
 def warm_grade(image, strength=0.5):
@@ -95,10 +104,16 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('source', help="Путь к исходной фотографии.")
         parser.add_argument('--out', default='', help="Куда сохранить результат.")
-        parser.add_argument('--strength', type=float, default=0.5,
-                            help="Сила тонировки: 0 — не трогать, 1 — максимум (по умолчанию 0.5).")
+        # 0.35 по умолчанию: если фон уже тёплый, сильная тонировка только
+        # съедает объём и делает кожу восковой.
+        parser.add_argument('--strength', type=float, default=0.35,
+                            help="Сила тонировки: 0 — не трогать, 1 — максимум (по умолчанию 0.35).")
         parser.add_argument('--focus', type=float, default=0.38,
                             help="Где резать по вертикали: 0 — от самого верха, 1 — от низа.")
+        parser.add_argument('--focus-x', type=float, default=0.5,
+                            help="Где резать по горизонтали: 0 — левый край, 1 — правый.")
+        parser.add_argument('--zoom', type=float, default=1.0,
+                            help="Подойти ближе: 1 — весь кадр, 1.5 — заметно крупнее лицо.")
         parser.add_argument('--about', action='store_true',
                             help="Записать во «Второе фото», а не в основной портрет.")
         parser.add_argument('--apply', action='store_true',
@@ -110,12 +125,15 @@ class Command(BaseCommand):
             raise CommandError(f"Не нашёл файл: {source}")
         if not 0 <= options['strength'] <= 1:
             raise CommandError("--strength задаётся числом от 0 до 1.")
+        if options['zoom'] < 1:
+            raise CommandError("--zoom меньше 1 означал бы дорисовать кадр — так нельзя.")
 
         with Image.open(source) as raw:
             # exif_transpose: иначе снятое боком фото с телефона ляжет на бок.
             image = ImageOps.exif_transpose(raw).convert('RGB')
 
-        image = crop_to_ratio(image, focus=options['focus'])
+        image = crop_to_ratio(image, focus=options['focus'],
+                              focus_x=options['focus_x'], zoom=options['zoom'])
         image = image.resize(TARGET, Image.LANCZOS)
         image = warm_grade(image, options['strength'])
         image = soften_edges(image, options['strength'])
