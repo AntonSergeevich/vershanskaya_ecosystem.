@@ -3,9 +3,12 @@
 Задача этих тестов — ловить опечатки в шаблонах и оборванные {% url %}:
 такие ошибки не видны при импорте и вылезают только на живой странице.
 """
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from core.models import FAQItem, SiteProfile, Testimonial
@@ -48,6 +51,27 @@ class SiteProfileTests(TestCase):
         self.client.force_login(staff)
         response = self.client.get('/admin/core/siteprofile/', follow=True)
         self.assertEqual(response.status_code, 200)
+
+
+class StickyHeaderTests(SimpleTestCase):
+    """Сторож против уже случившейся регрессии.
+
+    `overflow-x: hidden` на html или body делает элемент контейнером прокрутки,
+    и закреплённая шапка начинает липнуть к нему, а не к экрану — при скролле
+    меню уезжает вверх. Ловится только глазами в браузере, поэтому фиксируем
+    правило здесь: страховка от горизонтальной прокрутки должна быть clip.
+    """
+
+    def setUp(self):
+        self.css = (Path(settings.BASE_DIR) / 'static' / 'css' / 'main.css').read_text()
+
+    def test_page_root_does_not_use_overflow_hidden(self):
+        for rule in ('html { overflow-x: hidden', 'overflow-x: hidden;'):
+            self.assertNotIn(rule, self.css,
+                             "overflow-x: hidden ломает закреплённую шапку — нужен clip")
+
+    def test_header_is_still_sticky(self):
+        self.assertIn('position: sticky', self.css)
 
 
 class PhoneWidgetTests(TestCase):

@@ -37,13 +37,15 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-/* Страница не должна ездить вбок ни при какой ширине. Если что-то всё же
-   вылезет, вылезет оно молча, а не оторвёт вёрстку вправо. */
-html { overflow-x: hidden; }
+/* Страховка от горизонтальной прокрутки. Именно clip, а не hidden:
+   hidden делает элемент контейнером прокрутки, и тогда position: sticky
+   у шапки начинает липнуть к нему, а не к экрану — меню уезжает вверх
+   при скролле. clip обрезает так же, но контейнер не создаёт. */
+html { overflow-x: clip; }
 
 body {
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: var(--cream);
   color: var(--ink);
   font-family: var(--sans);
