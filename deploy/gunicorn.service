@@ -1,0 +1,38 @@
+# systemd-юнит для VPS. Положить в /etc/systemd/system/vershanskaya.service
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now vershanskaya
+#   sudo systemctl status vershanskaya
+#
+# Пути ниже — под установку в /srv/vershanskaya от пользователя www-data.
+# Поменяйте, если разложили иначе.
+
+[Unit]
+Description=Vershanskaya Ecosystem (gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/vershanskaya
+EnvironmentFile=/srv/vershanskaya/.env
+
+# --workers: примерно 2 × ядра + 1.
+# --timeout 120: загрузка видео урока в админку дольше стандартных 30 секунд.
+ExecStart=/srv/vershanskaya/venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8001 \
+    --workers 3 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile -
+
+Restart=always
+RestartSec=5
+
+# Немного изоляции: процессу нечего делать за пределами своего каталога.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
