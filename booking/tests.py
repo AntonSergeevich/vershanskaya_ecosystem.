@@ -110,6 +110,29 @@ class BookingViewTests(TestCase):
         booking = Booking.objects.get()
         self.assertRedirects(response, reverse('booking:detail', args=[booking.pk]))
 
+    def test_clicking_a_time_opens_confirmation_and_asks_for_the_request(self):
+        """Клик по времени не бронирует сразу: сначала спрашиваем, с чем придут."""
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('booking:book', args=[self.slot.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="notes"')
+        self.assertFalse(Booking.objects.exists())
+
+    def test_the_request_from_the_form_reaches_the_booking(self):
+        """Без этого Екатерина получает «запись на 14:00» и ни слова о запросе."""
+        self.client.force_login(self.user)
+        self.client.post(reverse('booking:book', args=[self.slot.pk]),
+                         {'notes': '  Развод, не понимаю, что дальше  '})
+
+        self.assertEqual(Booking.objects.get().notes, 'Развод, не понимаю, что дальше')
+
+    def test_confirmation_of_a_taken_slot_sends_back_to_the_calendar(self):
+        book_slot(User.objects.create(username='first'), self.slot.pk)
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('booking:book', args=[self.slot.pk]), follow=True)
+        self.assertContains(response, 'уже заняли')
+
     def test_taken_slot_shows_a_message_instead_of_an_error(self):
         book_slot(User.objects.create(username='first'), self.slot.pk)
         self.client.force_login(self.user)

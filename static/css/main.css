@@ -391,6 +391,19 @@ textarea { min-height: 116px; resize: vertical; }
 #tab-register:checked ~ .tab-panel-register { display: block; }
 .tab-panel { display: none; }
 
+/* Вход через Telegram */
+.tg-login { text-align: center; }
+.tg-login p { font-size: .82rem; margin: 10px 0 0; }
+
+/* Разделитель «или» — линия с надписью посередине. */
+.or-line {
+  display: flex; align-items: center; gap: 16px;
+  margin: 26px 0; color: var(--ink-muted); font-size: .82rem;
+}
+.or-line::before, .or-line::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
 /* --- Сообщения -------------------------------------------------------- */
 
 .messages { margin-top: 22px; }

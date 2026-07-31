@@ -170,6 +170,17 @@ TELEGRAM_ADMIN_CHAT_ID = os.getenv('TELEGRAM_ADMIN_CHAT_ID', '')
 TELEGRAM_CHANNEL_URL = os.getenv('TELEGRAM_CHANNEL_URL', 'https://t.me/ekaterinavershanskaya')
 INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/ekaterina_arhetypes/')
 
+# Почта — нужна только для восстановления пароля. В разработке письма
+# печатаются в консоль, в проде уходят через SMTP из .env.
+EMAIL_BACKEND = ('django.core.mail.backends.console.EmailBackend' if DEBUG
+                 else 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@localhost')
+
 # Разбор цифр в кабинете. Без ключа выводы считаются по правилам —
 # кабинет работает и без ИИ.
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')

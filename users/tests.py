@@ -1,6 +1,9 @@
+import re
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -173,3 +176,37 @@ class AuthFlowTests(TestCase):
             {'action': 'login', 'username': 'olga', 'password': 'sekret123',
              'next': 'https://evil.example.com/'})
         self.assertEqual(response['Location'], reverse('lms:dashboard'))
+
+
+class PasswordResetTests(TestCase):
+    """Восстановление пароля. Раньше забывший пароль не мог войти вообще."""
+
+    def setUp(self):
+        self.user = User.objects.create(username='olga', email='olga@example.com')
+        self.user.set_password('sekret123')
+        self.user.save()
+
+    def test_form_sends_a_letter_with_a_working_link(self):
+        response = self.client.post(reverse('users:password_reset'),
+                                    {'email': 'olga@example.com'})
+        self.assertRedirects(response, reverse('users:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+
+        link = re.search(r'https?://\S+/profil/parol/\S+', mail.outbox[0].body)
+        self.assertIsNotNone(link, f"в письме нет ссылки:\n{mail.outbox[0].body}")
+
+        # Django подменяет токен в адресе на set-password и кладёт его в сессию.
+        path = urlparse(link.group(0).rstrip('.')).path
+        self.assertEqual(self.client.get(path, follow=True).status_code, 200)
+
+    def test_unknown_email_does_not_reveal_that_it_is_unknown(self):
+        """Одинаковый ответ на любой адрес: иначе форма превращается в
+        проверку «есть ли такой человек на сайте»."""
+        response = self.client.post(reverse('users:password_reset'),
+                                    {'email': 'nobody@example.com'})
+        self.assertRedirects(response, reverse('users:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_the_login_page_offers_to_restore_the_password(self):
+        response = self.client.get(reverse('users:enter'))
+        self.assertContains(response, reverse('users:password_reset'))

@@ -11,6 +11,24 @@
       <p class="muted">Здесь ваши курсы, разборы и подписка.</p>
     </div>
 
+    {% if telegram_bot %}
+      {% comment %}
+        Виджет Telegram грузится с их домена и сам рисует кнопку. Он же
+        единственный способ узнать telegram_id — без него не уйдут ни
+        приглашение в клуб, ни уведомления.
+      {% endcomment %}
+      <div class="tg-login">
+        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                data-telegram-login="{{ telegram_bot }}"
+                data-size="large"
+                data-radius="20"
+                data-auth-url="{{ request.scheme }}://{{ request.get_host }}{% url 'users:telegram_login' %}{% if next_url %}?next={{ next_url|urlencode }}{% endif %}"
+                data-request-access="write"></script>
+        <p class="muted">Быстрее всего — и пароль не понадобится</p>
+      </div>
+      <div class="or-line"><span>или по телефону</span></div>
+    {% endif %}
+
     {# Вкладки на радиокнопках: работают без JavaScript. #}
     <input class="tab-radio" type="radio" name="entry-tab" id="tab-login"
            {% if active_tab != 'register' %}checked{% endif %}>
@@ -33,6 +51,9 @@
         {% endfor %}
         <button class="btn btn-block" type="submit">Войти</button>
       </form>
+      <p class="muted center" style="font-size:.86rem;margin-top:16px">
+        <a href="{% url 'users:password_reset' %}">Забыли пароль?</a>
+      </p>
     </div>
 
     <div class="tab-panel tab-panel-register">

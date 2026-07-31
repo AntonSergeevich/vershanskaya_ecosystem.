@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Записаться на {{ slot.start_time|date:"j E, H:i" }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container form-card">
+    <div class="center" style="margin-bottom:26px">
+      <span class="eyebrow">Личный разбор</span>
+      <h1 style="font-size:1.9rem">{{ slot.start_time|date:"j E, H:i" }}</h1>
+      <p class="muted">
+        {{ slot.duration_minutes }} минут в Zoom.
+        Ссылку пришлём ближе к встрече.
+      </p>
+    </div>
+
+    <form method="post" class="card" novalidate>
+      {% csrf_token %}
+      <div class="form-field">
+        <label for="notes">С чем придёте?</label>
+        <textarea id="notes" name="notes" maxlength="2000"
+                  placeholder="Пара предложений о том, что происходит сейчас и что хочется понять."></textarea>
+        <span class="helptext">
+          Не обязательно, но с этим разбор получается предметнее: Екатерина
+          успеет подумать заранее, и не придётся тратить время встречи на ввод в курс дела.
+        </span>
+      </div>
+      <button class="btn btn-block" type="submit">Записаться</button>
+    </form>
+
+    <p class="muted center" style="font-size:.86rem;margin-top:18px">
+      Передумаете — отмените в кабинете, время вернётся другим.
+      <br><a href="{% url 'booking:slots' %}">Выбрать другое время</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

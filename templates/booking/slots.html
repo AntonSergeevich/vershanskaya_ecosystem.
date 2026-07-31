@@ -32,10 +32,10 @@
         <div class="slot-grid">
           {% for slot in day.slots %}
             {% if user.is_authenticated %}
-              <form class="slot-form" method="post" action="{% url 'booking:book' slot.pk %}">
-                {% csrf_token %}
-                <button class="slot-button" type="submit">{{ slot.start_time|date:"H:i" }}</button>
-              </form>
+              {# Ведёт на подтверждение, а не бронирует сразу: там спрашиваем запрос. #}
+              <a class="slot-button" href="{% url 'booking:book' slot.pk %}">
+                {{ slot.start_time|date:"H:i" }}
+              </a>
             {% else %}
               <a class="slot-button" href="{% url 'users:enter' %}?next={{ request.path|urlencode }}">
                 {{ slot.start_time|date:"H:i" }}

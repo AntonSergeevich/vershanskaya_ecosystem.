@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import Booking
+from .models import Booking, BookingSlot
 from .services import SlotUnavailable, book_slot, cancel_booking, upcoming_slots
 
 
@@ -22,9 +22,21 @@ def slots(request):
 
 
 @login_required
-@require_POST
 def book(request, pk):
-    """Запись на разбор. Слот занимается атомарно — см. services.book_slot."""
+    """Подтверждение записи: показываем время и спрашиваем, с чем человек придёт.
+
+    Раньше клик по времени бронировал сразу. Так было на клик быстрее, но
+    Екатерина получала «запись на 14:00» без единого слова о запросе, а
+    человек не имел шанса передумать.
+    """
+    slot = get_object_or_404(BookingSlot, pk=pk)
+
+    if request.method != 'POST':
+        if not slot.is_available:
+            messages.error(request, "Это время уже заняли. Выберите другое.")
+            return redirect('booking:slots')
+        return render(request, 'booking/confirm.html', {'slot': slot})
+
     try:
         booking = book_slot(request.user, pk, notes=request.POST.get('notes', '').strip())
     except SlotUnavailable as exc:

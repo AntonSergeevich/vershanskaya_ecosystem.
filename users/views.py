@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -8,6 +9,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from crm import services as crm
 from lms.models import LessonProgress
 
+from . import telegram_auth
 from .forms import LoginForm, ProfileForm, RegisterForm
 
 
@@ -55,7 +57,36 @@ def enter(request):
         'register_form': register_form,
         'active_tab': active,
         'next_url': request.POST.get('next') or request.GET.get('next', ''),
+        # Виджет показываем только когда бот настроен: пустая кнопка,
+        # которая ничего не делает, хуже её отсутствия.
+        'telegram_bot': settings.TELEGRAM_BOT_USERNAME if settings.TELEGRAM_BOT_TOKEN else '',
     })
+
+
+def telegram_login(request):
+    """Вход через виджет Telegram.
+
+    Виджет присылает данные в адресной строке; их подлинность проверяет
+    telegram_auth.authenticate по подписи. Заодно это единственное место,
+    где у пользователя появляется telegram_id — без него не отправить ни
+    приглашение в клуб, ни уведомление.
+    """
+    user, created = telegram_auth.authenticate(request.GET.dict())
+
+    if user is None:
+        messages.error(request, "Не удалось подтвердить вход через Telegram. "
+                                "Попробуйте ещё раз или войдите по телефону.")
+        return redirect('users:enter')
+
+    login(request, user)
+    if created:
+        crm.advance_lead(user, 'new', source='Вход через Telegram')
+        messages.success(request, f"Здравствуйте, {user.display_name}! "
+                                  "Кабинет создан, пароль не нужен.")
+    else:
+        messages.success(request, "Telegram привязан — теперь придут приглашение "
+                                  "в клуб и уведомления о разборах.")
+    return redirect(_safe_next(request))
 
 
 @login_required
