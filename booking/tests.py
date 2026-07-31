@@ -6,6 +6,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from quiz.models import Answer, Option, Question, Quiz, QuizAttempt
+
 from booking.models import Booking, BookingSlot
 from booking.services import SlotUnavailable, book_slot, cancel_booking, upcoming_slots
 from crm.models import CRMLead
@@ -159,3 +161,49 @@ class GenerateSlotsCommandTests(TestCase):
     def test_command_never_creates_slots_in_the_past(self):
         call_command('generate_slots', days=3, verbosity=0)
         self.assertFalse(BookingSlot.objects.filter(start_time__lte=timezone.now()).exists())
+
+
+class QuizAtBookingTests(TestCase):
+    """Ответы теста подтягиваются к записи — их не надо пересказывать."""
+
+    def setUp(self):
+        self.user = User.objects.create(username='marina', archetype='creator')
+        self.slot = make_slot()
+        self.client.force_login(self.user)
+
+        quiz = Quiz.objects.create(title='Архетипы', slug='arhetipy')
+        question = Question.objects.create(quiz=quiz, text='Что вас держит?')
+        option = Option.objects.create(question=question, text='Страх ошибиться',
+                                       archetype='creator')
+        self.attempt = QuizAttempt.objects.create(quiz=quiz, user=self.user,
+                                                  is_completed=True,
+                                                  result_archetype='creator',
+                                                  completed_at=timezone.now())
+        Answer.objects.create(attempt=self.attempt, question=question, option=option)
+
+    def test_confirmation_shows_the_archetype_and_the_answers(self):
+        response = self.client.get(reverse('booking:book', args=[self.slot.pk]))
+
+        self.assertContains(response, 'Творец')
+        self.assertContains(response, 'Что вас держит?')
+        self.assertContains(response, 'Страх ошибиться')
+
+    def test_without_a_quiz_the_page_invites_to_take_it(self):
+        self.attempt.delete()
+        response = self.client.get(reverse('booking:book', args=[self.slot.pk]))
+        self.assertContains(response, 'Семь вопросов')
+
+    def test_unfinished_attempt_does_not_count_as_a_result(self):
+        """Брошенный на середине тест — не то, что стоит показывать как итог."""
+        self.attempt.is_completed = False
+        self.attempt.save()
+
+        response = self.client.get(reverse('booking:book', args=[self.slot.pk]))
+        self.assertContains(response, 'Семь вопросов')
+
+    def test_the_notification_carries_the_archetype(self):
+        from unittest.mock import patch
+        with patch('core.services.telegram.notify_admins') as notify:
+            book_slot(self.user, self.slot.pk, notes='Про работу')
+
+        self.assertIn('Архетип: Творец', notify.call_args.args[0])

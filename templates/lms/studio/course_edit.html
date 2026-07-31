@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load ru %}
 
 {% block title %}{{ course.title }} — студия{% endblock %}
@@ -109,4 +110,8 @@
 
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/editor.js' %}" defer></script>
 {% endblock %}

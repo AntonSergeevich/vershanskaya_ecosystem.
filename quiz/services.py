@@ -9,7 +9,27 @@ from crm import services as crm
 from core.services import telegram
 from users.utils import find_or_create_lead_user
 
+from .models import QuizAttempt
+
 logger = logging.getLogger(__name__)
+
+
+def latest_result(user):
+    """Последнее пройденное прохождение квиза вместе с ответами.
+
+    Нужно там, где о человеке полезно знать заранее: на подтверждении записи
+    и в карточке лида. Берём живую попытку, а не копию в момент записи —
+    если человек прошёл квиз заново, Екатерина увидит свежий результат.
+    """
+    if user is None or not getattr(user, 'pk', None):
+        return None
+
+    return (QuizAttempt.objects
+            .filter(user=user, is_completed=True)
+            .select_related('quiz')
+            .prefetch_related('answers__question', 'answers__option')
+            .order_by('-completed_at')
+            .first())
 
 
 def complete_attempt(attempt, request=None):

@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from quiz import services as quiz_services
+
 from .models import Booking, BookingSlot
 from .services import SlotUnavailable, book_slot, cancel_booking, upcoming_slots
 
@@ -35,7 +37,13 @@ def book(request, pk):
         if not slot.is_available:
             messages.error(request, "Это время уже заняли. Выберите другое.")
             return redirect('booking:slots')
-        return render(request, 'booking/confirm.html', {'slot': slot})
+        # Показываем, что Екатерина уже знает из квиза: человеку не нужно
+        # пересказывать то, что он уже отвечал, а поле «с чем придёте»
+        # перестаёт выглядеть анкетой с чистого листа.
+        return render(request, 'booking/confirm.html', {
+            'slot': slot,
+            'attempt': quiz_services.latest_result(request.user),
+        })
 
     try:
         booking = book_slot(request.user, pk, notes=request.POST.get('notes', '').strip())

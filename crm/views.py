@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from core.decorators import staff_required
 from core.services.analytics import dashboard_data
 from core.services.insights import ai_enabled, insights
+from quiz import services as quiz_services
 
 from . import services
 from .models import CRMLead
@@ -62,9 +63,11 @@ def lead_detail(request, pk):
         return redirect('crm:lead', pk=lead.pk)
 
     user = lead.user
+    last_attempt = quiz_services.latest_result(user)
     return render(request, 'crm/lead_detail.html', {
         'lead': lead,
         'attempts': user.quiz_attempts.select_related('quiz')[:5],
+        'quiz_answers': last_attempt.answers.all() if last_attempt else None,
         'bookings': user.bookings.select_related('slot')[:5],
         'payments': user.payments.all()[:5],
         'stages': CRMLead.STAGE_CHOICES,

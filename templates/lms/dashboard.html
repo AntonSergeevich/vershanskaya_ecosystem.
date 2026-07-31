@@ -55,7 +55,7 @@
             <span class="badge badge-muted">🔒 {{ item.course.get_access_level_display }}</span>
           {% endif %}
           <h3 style="margin-top:14px">{{ item.course.title }}</h3>
-          <p class="muted">{{ item.course.description|truncatewords:16 }}</p>
+          <p class="muted">{{ item.course.description|plain|truncatewords:16 }}</p>
           {% if item.available and item.course.lesson_count %}
             <div class="progress-label">
               <span>{{ item.progress }}% пройдено</span>

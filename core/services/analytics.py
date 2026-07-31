@@ -15,11 +15,17 @@ from payments.models import Payment
 from quiz.models import QuizAttempt
 from users.models import Subscription
 
+# Екатерина ходит по собственному сайту: проходит квиз, чтобы посмотреть,
+# как он выглядит, записывается на тестовый разбор, отмечает оплату руками.
+# В цифрах кабинета этого быть не должно — иначе конверсия и выручка врут.
+NOT_STAFF = {'user__is_staff': False}
+
 
 def money_summary(months=12):
     """Выручка по месяцам плюс итоги за последние 30 дней."""
     since = timezone.now() - timedelta(days=31 * months)
-    paid = Payment.objects.filter(status=Payment.STATUS_SUCCEEDED, paid_at__gte=since)
+    paid = Payment.objects.filter(status=Payment.STATUS_SUCCEEDED, paid_at__gte=since,
+                                 **NOT_STAFF)
 
     by_month = (paid
                 .annotate(month=TruncMonth('paid_at'))
@@ -61,12 +67,12 @@ def club_summary():
     """Состояние подписки: сколько людей внутри и сколько уходит."""
     now = timezone.now()
     active = Subscription.objects.filter(status__in=['active', 'canceled'],
-                                         next_billing_date__gt=now)
+                                         next_billing_date__gt=now, **NOT_STAFF)
     month_ago = now - timedelta(days=30)
 
-    canceled_30 = Subscription.objects.filter(status='canceled',
+    canceled_30 = Subscription.objects.filter(status='canceled', **NOT_STAFF,
                                               canceled_at__gte=month_ago).count()
-    new_30 = Subscription.objects.filter(start_date__gte=month_ago).count()
+    new_30 = Subscription.objects.filter(start_date__gte=month_ago, **NOT_STAFF).count()
 
     return {
         'active': active.count(),
@@ -81,10 +87,13 @@ def club_summary():
 
 def funnel_summary():
     """Путь от квиза до подписки в абсолютных числах."""
-    attempts = QuizAttempt.objects.count()
-    completed = QuizAttempt.objects.filter(is_completed=True).count()
-    leads = CRMLead.objects.count()
-    subscribed = CRMLead.objects.filter(stage='subscribed').count()
+    # exclude по nullable-связи оставляет анонимные попытки (user=None) —
+    # это трафик, и он считается. Уходят только свои.
+    visible = QuizAttempt.objects.exclude(user__is_staff=True)
+    attempts = visible.count()
+    completed = visible.filter(is_completed=True).count()
+    leads = CRMLead.objects.clients().count()
+    subscribed = CRMLead.objects.clients().filter(stage='subscribed').count()
 
     return {
         'attempts': attempts,
@@ -94,7 +103,8 @@ def funnel_summary():
         'leads': leads,
         'subscribed': subscribed,
         'lead_to_client': round(subscribed / leads * 100) if leads else 0,
-        'stages': list(CRMLead.objects.values('stage').annotate(total=Count('id'))),
+        'stages': list(CRMLead.objects.clients().values('stage')
+                                      .annotate(total=Count('id'))),
     }
 
 
@@ -102,11 +112,11 @@ def booking_summary():
     """Разборы: проведённые, предстоящие, отменённые."""
     now = timezone.now()
     month_ago = now - timedelta(days=30)
-    bookings = Booking.objects.filter(created_at__gte=month_ago)
+    bookings = Booking.objects.filter(created_at__gte=month_ago, **NOT_STAFF)
 
     return {
         'upcoming': Booking.objects.filter(is_canceled=False, is_completed=False,
-                                           slot__start_time__gt=now).count(),
+                                           slot__start_time__gt=now, **NOT_STAFF).count(),
         'done_30': bookings.filter(is_completed=True).count(),
         'canceled_30': bookings.filter(is_canceled=True).count(),
         'total_30': bookings.count(),

@@ -49,6 +49,8 @@ def book_slot(user, slot_id, notes=''):
         f"📅 <b>Запись на разбор</b>\n{user.display_name}\n"
         f"{timezone.localtime(slot.start_time):%d.%m.%Y %H:%M}\n"
         f"Телефон: {user.phone or '—'}\n"
+        # Архетип из квиза — половина контекста встречи ещё до её начала.
+        f"Архетип: {user.archetype_label or '—'}\n"
         f"Запрос: {notes or '—'}")
     logger.info("Бронь: %s на %s", user, slot.start_time)
     return booking

@@ -653,6 +653,55 @@ textarea { min-height: 116px; resize: vertical; }
   padding: 48px 30px; text-align: center; color: var(--ink-muted);
 }
 
+/* --- Панель форматирования и оформленный текст ------------------------------- */
+
+.editor-bar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.editor-button {
+  min-width: 34px; height: 32px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card); color: var(--ink-soft);
+  font-size: .9rem; line-height: 1; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.editor-button:hover { border-color: var(--sage); color: var(--sage-deep); }
+.editor-hint { font-size: .78rem; color: var(--ink-muted); margin-left: auto; }
+
+/* Текст урока и описания курса — то, что собрал markup.py. */
+.rich-text > :first-child { margin-top: 0; }
+/* Хвостовой отступ убираем только внутри карточки: в потоке страницы за
+   текстом идёт следующий блок, и он не должен к нему прилипать. */
+.card.rich-text > :last-child { margin-bottom: 0; }
+.rich-text h2 { font-size: 1.45rem; margin: 1.6em 0 .5em; }
+.rich-text h3 { font-size: 1.15rem; margin: 1.4em 0 .4em; }
+.rich-text ul, .rich-text ol { margin: 0 0 1em; padding-left: 1.3em; }
+.rich-text li { margin-bottom: .4em; }
+.rich-text blockquote {
+  margin: 1.2em 0; padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--sage); color: var(--ink-soft); font-style: italic;
+}
+
+/* --- Ответы из квиза (сворачиваемый блок) ----------------------------------- */
+
+.quiz-recap { margin-bottom: 26px; }
+.quiz-recap summary {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 14px; flex-wrap: wrap; cursor: pointer; list-style: none;
+  font-size: .95rem;
+}
+.quiz-recap summary::-webkit-details-marker { display: none; }
+.quiz-recap summary .muted { font-size: .82rem; }
+.quiz-recap summary .muted::after { content: ' ▾'; }
+.quiz-recap[open] summary .muted::after { content: ' ▴'; }
+
+.recap-list { list-style: none; margin: 18px 0 0; padding: 0; }
+.recap-list li {
+  padding: 11px 0; border-top: 1px solid var(--line-soft); font-size: .9rem;
+}
+.recap-list .muted { display: block; font-size: .82rem; margin-bottom: 3px; }
+
 /* --- Студия курсов ---------------------------------------------------------- */
 
 .studio-head {

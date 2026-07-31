@@ -57,6 +57,24 @@
               <span class="muted">{{ attempt.created_at|date:"d.m.Y" }}</span>
             </p>
           {% empty %}<p class="muted">Не проходил.</p>{% endfor %}
+
+          {% if quiz_answers %}
+            {% comment %}
+              Сами ответы, а не только итоговый архетип: к разбору полезнее
+              знать, на чём человек остановился, чем ярлык.
+            {% endcomment %}
+            <details class="quiz-recap" style="margin-top:14px">
+              <summary><span>Ответы последнего теста</span></summary>
+              <ul class="recap-list">
+                {% for answer in quiz_answers %}
+                  <li>
+                    <span class="muted">{{ answer.question.text }}</span>
+                    <strong>{{ answer.option.text }}</strong>
+                  </li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% endif %}
         </div>
 
         <div class="card">

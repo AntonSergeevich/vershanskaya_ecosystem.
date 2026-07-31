@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
+{% load ru %}
 
 {% block title %}{{ course.title }} — {{ SITE_NAME }}{% endblock %}
-{% block description %}{{ course.description|truncatewords:26 }}{% endblock %}
+{% block description %}{{ course.description|plain|truncatewords:26 }}{% endblock %}
 
 {% block content %}
 <section class="section">
@@ -11,7 +12,7 @@
       <div>
         <span class="eyebrow">{{ course.get_access_level_display }}</span>
         <h1>{{ course.title }}</h1>
-        <p class="soft">{{ course.description|linebreaksbr }}</p>
+        <div class="soft rich-text">{{ course.description|rich }}</div>
 
         {% if available and course.lesson_count %}
           <div class="progress-label" style="max-width:320px">

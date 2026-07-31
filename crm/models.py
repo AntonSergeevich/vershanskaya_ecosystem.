@@ -1,6 +1,18 @@
 from django.db import models
 from django.conf import settings
 
+
+class LeadQuerySet(models.QuerySet):
+    def clients(self):
+        """Только настоящие клиенты, без Екатерины и других сотрудников.
+
+        Екатерина заходит на свой же сайт: проходит квиз, чтобы посмотреть,
+        как он выглядит, записывается на тестовый разбор. Каждое такое
+        действие заводило ей лид и портило и доску, и конверсию.
+        """
+        return self.filter(user__is_staff=False)
+
+
 class CRMLead(models.Model):
     """Воронка продаж / Лид в Канбан-доске"""
     STAGE_CHOICES = [
@@ -18,6 +30,8 @@ class CRMLead(models.Model):
     notes = models.TextField("Заметки менеджера", blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = LeadQuerySet.as_manager()
 
     class Meta:
         verbose_name = "Лид CRM"

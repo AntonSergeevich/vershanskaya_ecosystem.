@@ -27,7 +27,14 @@ def stage_index(stage):
 
 
 def get_or_create_lead(user, source=''):
-    """Возвращает лид пользователя, создавая его при первом касании."""
+    """Возвращает лид пользователя, создавая его при первом касании.
+
+    Для сотрудников лид не заводим вовсе: Екатерина ходит по собственному
+    сайту и её собственные шаги не должны попадать в воронку.
+    """
+    if user.is_staff:
+        return None
+
     lead, created = CRMLead.objects.get_or_create(
         user=user,
         defaults={'source': source or 'Сайт'},
@@ -40,12 +47,15 @@ def get_or_create_lead(user, source=''):
 def advance_lead(user, stage, note='', source=''):
     """Двигает лид на указанный этап, если это шаг вперёд.
 
-    Возвращает лид (или None, если пользователя нет — например, аноним).
+    Возвращает лид или None — если пользователя нет (аноним) либо это
+    сотрудник, которому в воронке не место.
     """
     if user is None or not getattr(user, 'pk', None):
         return None
 
     lead = get_or_create_lead(user, source=source)
+    if lead is None:
+        return None
 
     if stage_index(stage) > stage_index(lead.stage):
         lead.stage = stage
@@ -76,7 +86,7 @@ def set_stage(lead, stage):
 
 def board_columns():
     """Данные для канбан-доски: колонки в порядке воронки с лидами внутри."""
-    leads = (CRMLead.objects
+    leads = (CRMLead.objects.clients()
              .select_related('user')
              .order_by('-updated_at'))
 
@@ -93,7 +103,7 @@ def board_columns():
 def funnel_stats():
     """Сколько лидов на каждом этапе и какая конверсия дошла до подписки."""
     counts = {code: 0 for code, _ in CRMLead.STAGE_CHOICES}
-    for row in CRMLead.objects.values('stage').annotate(total=Count('id')):
+    for row in CRMLead.objects.clients().values('stage').annotate(total=Count('id')):
         counts[row['stage']] = row['total']
 
     total = sum(counts.values()) or 1
@@ -115,7 +125,7 @@ def send_campaign(campaign):
     Пишем только тем, у кого есть Telegram ID: слать «в никуда» бессмысленно,
     а SMS-шлюз в проекте пока не подключён.
     """
-    leads = CRMLead.objects.select_related('user')
+    leads = CRMLead.objects.clients().select_related('user')
     if campaign.target_stage:
         leads = leads.filter(stage=campaign.target_stage)
 

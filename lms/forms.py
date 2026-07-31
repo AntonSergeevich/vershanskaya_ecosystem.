@@ -16,7 +16,8 @@ class CourseForm(forms.ModelForm):
         fields = ['title', 'description', 'cover', 'access_level', 'price',
                   'for_archetype', 'order', 'is_published']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 5}),
+            # data-editor подключает панель форматирования (static/js/editor.js).
+            'description': forms.Textarea(attrs={'rows': 5, 'data-editor': ''}),
         }
         help_texts = {
             'order': "Чем меньше число, тем выше курс в списке.",
@@ -52,7 +53,7 @@ class LessonForm(forms.ModelForm):
         fields = ['title', 'module', 'duration_minutes', 'video_file', 'video_url',
                   'content', 'is_preview']
         widgets = {
-            'content': forms.Textarea(attrs={'rows': 10}),
+            'content': forms.Textarea(attrs={'rows': 12, 'data-editor': ''}),
         }
 
     def __init__(self, *args, course=None, **kwargs):

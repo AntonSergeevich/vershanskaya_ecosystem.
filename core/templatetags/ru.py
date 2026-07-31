@@ -56,3 +56,17 @@ def plural(count, forms):
 def counted(count, forms):
     """Число вместе со словом: {{ n|counted:"урок,урока,уроков" }} → «3 урока»."""
     return f"{count} {plural(count, forms)}"
+
+
+@register.filter
+def rich(text):
+    """Текст с простой разметкой → HTML. Смотрите core.services.markup."""
+    from core.services.markup import render
+    return render(text)
+
+
+@register.filter
+def plain(text):
+    """Тот же текст, но без пометок форматирования — для коротких превью."""
+    from core.services.markup import plain as strip_markup
+    return strip_markup(text)

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ru %}
 
 {% block title %}Клуб «Творец» — {{ SITE_NAME }}{% endblock %}
 
@@ -31,7 +32,7 @@
             {% for course in club_courses %}
               <a class="card card-link" href="{{ course.get_absolute_url }}">
                 <h3 style="font-size:1.05rem">{{ course.title }}</h3>
-                <p class="muted" style="margin:0;font-size:.9rem">{{ course.description|truncatewords:12 }}</p>
+                <p class="muted" style="margin:0;font-size:.9rem">{{ course.description|plain|truncatewords:12 }}</p>
               </a>
             {% endfor %}
           </div>

@@ -14,6 +14,34 @@
       </p>
     </div>
 
+    {% if attempt %}
+      {% comment %}
+        Ответы из квиза уже у Екатерины — показываем их, чтобы человек не
+        пересказывал то, что однажды написал, и видел, с чем к нему придут.
+      {% endcomment %}
+      <details class="card quiz-recap">
+        <summary>
+          <span>Екатерина уже видит ваш архетип —
+            <strong>{{ attempt.result_label }}</strong></span>
+          <span class="muted">ответы из теста</span>
+        </summary>
+        <ul class="recap-list">
+          {% for answer in attempt.answers.all %}
+            <li>
+              <span class="muted">{{ answer.question.text }}</span>
+              <strong>{{ answer.option.text }}</strong>
+            </li>
+          {% endfor %}
+        </ul>
+      </details>
+    {% else %}
+      <p class="muted center" style="font-size:.88rem">
+        Ещё не проходили тест на архетип?
+        <a href="{% url 'quiz:list' %}">Семь вопросов</a> — и разбор начнётся
+        не с расспросов, а с сути.
+      </p>
+    {% endif %}
+
     <form method="post" class="card" novalidate>
       {% csrf_token %}
       <div class="form-field">

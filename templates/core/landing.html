@@ -133,7 +133,7 @@
           {% endif %}
           <span class="badge badge-green">Бесплатно</span>
           <h3 style="margin-top:14px">{{ course.title }}</h3>
-          <p class="muted">{{ course.description|truncatewords:18 }}</p>
+          <p class="muted">{{ course.description|plain|truncatewords:18 }}</p>
           <p class="muted" style="margin:0">{{ course.lesson_count|counted:"урок,урока,уроков" }}</p>
         </a>
       {% endfor %}

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ru %}
 
 {% block title %}{{ lesson.title }} — {{ course.title }}{% endblock %}
 
@@ -26,8 +27,8 @@
     </div>
 
     {% if lesson.content %}
-      <div class="card" style="margin-top:26px">
-        {{ lesson.content|linebreaks }}
+      <div class="card rich-text" style="margin-top:26px">
+        {{ lesson.content|rich }}
       </div>
     {% endif %}
 

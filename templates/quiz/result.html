@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ru %}
 
 {% block title %}Ваш архетип — {{ attempt.result_label }}{% endblock %}
 
@@ -41,7 +42,7 @@
       {% for course in recommended %}
         <a class="card card-link" href="{{ course.get_absolute_url }}">
           <h3>{{ course.title }}</h3>
-          <p class="muted" style="margin:0">{{ course.description|truncatewords:16 }}</p>
+          <p class="muted" style="margin:0">{{ course.description|plain|truncatewords:16 }}</p>
         </a>
       {% endfor %}
     </div>
