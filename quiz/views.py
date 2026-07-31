@@ -1,8 +1,10 @@
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
+from django.urls import reverse
 
-from core.constants import ARCHETYPE_LABELS
+from core.constants import ARCHETYPE_CHOICES, ARCHETYPE_DESCRIPTIONS, ARCHETYPE_LABELS
 from lms.services import visible_courses
 
 from .forms import ContactForm
@@ -60,16 +62,31 @@ def start(request, slug):
     return render(request, 'quiz/start.html', {'quiz': quiz})
 
 
-def question(request, pk):
-    """Один вопрос на экран: короткий шаг легче сделать, чем длинную анкету."""
+def question(request, pk, order=None):
+    """Один вопрос на экран: короткий шаг легче сделать, чем длинную анкету.
+
+    Без order показываем первый неотвеченный вопрос — обычный ход квиза.
+    С order человек вернулся назад, чтобы поменять ответ.
+    """
     attempt = _get_attempt(request, pk)
 
     if attempt.is_completed:
         return redirect('quiz:result', pk=attempt.pk)
 
-    current = attempt.next_question()
-    if current is None:
-        return redirect('quiz:contact', pk=attempt.pk)
+    questions = list(attempt.quiz.questions.all())
+    answered = set(attempt.answers.values_list('question_id', flat=True))
+
+    if order is None:
+        current = attempt.next_question()
+        if current is None:
+            return redirect('quiz:contact', pk=attempt.pk)
+    else:
+        current = next((item for item in questions if item.order == order), None)
+        # Вперёд по ссылке не перепрыгнуть: вопрос должен быть либо уже
+        # отвечен, либо тот самый, до которого человек дошёл честно.
+        if current is None or (current.id not in answered
+                               and current != attempt.next_question()):
+            return redirect('quiz:question', pk=attempt.pk)
 
     if request.method == 'POST':
         option = Option.objects.filter(pk=request.POST.get('option'),
@@ -77,19 +94,26 @@ def question(request, pk):
         if option is None:
             messages.error(request, "Выберите один из вариантов.")
         else:
-            # update_or_create, а не create: кнопка «назад» в браузере
-            # не должна ломать прохождение уникальным ограничением.
+            # update_or_create, а не create: и кнопка «назад» в браузере, и
+            # наша собственная не должны ломать прохождение уникальным
+            # ограничением — ответ просто перезаписывается.
             Answer.objects.update_or_create(
                 attempt=attempt, question=current, defaults={'option': option})
             return redirect('quiz:question', pk=attempt.pk)
 
+    index = questions.index(current)
     return render(request, 'quiz/question.html', {
         'attempt': attempt,
         'quiz': attempt.quiz,
         'question': current,
         'options': current.options.all(),
-        'number': attempt.answered_count + 1,
+        'number': index + 1,
         'total': attempt.quiz.question_count,
+        'previous_question': questions[index - 1] if index else None,
+        # Свой ответ подсвечиваем: вернувшись, человек должен видеть, что
+        # он выбрал в прошлый раз, а не выбирать вслепую заново.
+        'chosen_id': attempt.answers.filter(question=current)
+                                    .values_list('option_id', flat=True).first(),
     })
 
 
@@ -152,4 +176,44 @@ def result(request, pk):
         'quiz': attempt.quiz,
         'breakdown': breakdown,
         'recommended': recommended,
+        # Делимся публичной страницей архетипа, а не этой: адрес результата
+        # привязан к сессии, и у друга он открылся бы ошибкой 404.
+        'share_url': request.build_absolute_uri(
+            reverse('quiz:archetype', kwargs={'code': attempt.result_archetype})),
+        'share_text': f"Мой архетип — {attempt.result_label}. "
+                      f"Семь вопросов, чтобы узнать свой:",
+        'share_image': archetype_image(attempt.result_archetype),
+    })
+
+
+def archetype_image(code):
+    """Адрес картинки-превью для архетипа.
+
+    Считаем в Python, а не шаблоном: в проде статика раздаётся по манифесту
+    с хешем в имени, и собрать путь из кусочков в шаблоне уже нельзя.
+    """
+    return static(f'img/og/{code}.png')
+
+
+def archetype(request, code):
+    """Публичная страница архетипа — то, что открывается по ссылке из чата.
+
+    Отдельная страница нужна ровно потому, что результатом поделиться
+    нельзя: он привязан к сессии автора. Здесь же всё открыто, и главное
+    действие — пройти квиз самому.
+    """
+    label = ARCHETYPE_LABELS.get(code)
+    if label is None:
+        raise Http404
+
+    return render(request, 'quiz/archetype.html', {
+        'code': code,
+        'label': label,
+        'description': ARCHETYPE_DESCRIPTIONS.get(code, ''),
+        'quiz': Quiz.objects.filter(is_published=True).first(),
+        'recommended': [course for course in visible_courses(request.user)
+                        if course.for_archetype == code][:3],
+        'others': [(other, other_label) for other, other_label in ARCHETYPE_CHOICES
+                   if other != code],
+        'share_image': archetype_image(code),
     })

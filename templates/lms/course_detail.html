@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load ru %}
 
+{% block og_title %}{{ course.title }}{% endblock %}
+{% block og_description %}{{ course.description|plain|truncatewords:28 }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
 {% block title %}{{ course.title }} — {{ SITE_NAME }}{% endblock %}
 {% block description %}{{ course.description|plain|truncatewords:26 }}{% endblock %}
 

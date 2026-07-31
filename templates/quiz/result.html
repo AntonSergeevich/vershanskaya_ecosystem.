@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
-{% load ru %}
+{% load ru static %}
 
 {% block title %}Ваш архетип — {{ attempt.result_label }}{% endblock %}
+{% block og_title %}Мой архетип — {{ attempt.result_label }}{% endblock %}
+{% block og_description %}{{ attempt.result_description }}{% endblock %}
+{% block og_image %}{{ share_image }}{% endblock %}
 
 {% block content %}
 <div class="container quiz-shell">
@@ -29,6 +32,26 @@
       {% endfor %}
     </div>
   {% endif %}
+
+  {% comment %}
+    Делимся публичной страницей архетипа, а не этой: адрес результата
+    привязан к сессии, и у друга он открылся бы ошибкой.
+  {% endcomment %}
+  <div class="card share-card" data-share-url="{{ share_url }}" data-share-text="{{ share_text }}">
+    <div>
+      <h3 style="margin:0 0 4px">Поделиться</h3>
+      <p class="muted" style="margin:0;font-size:.88rem">
+        Друзья пройдут тест и узнают свой архетип.
+      </p>
+    </div>
+    <div class="share-buttons">
+      <a class="btn btn-ghost btn-small" rel="noopener" target="_blank"
+         href="https://t.me/share/url?url={{ share_url|urlencode }}&text={{ share_text|urlencode }}">Telegram</a>
+      <a class="btn btn-ghost btn-small" rel="noopener" target="_blank"
+         href="https://api.whatsapp.com/send?text={{ share_text|urlencode }}%20{{ share_url|urlencode }}">WhatsApp</a>
+      <button class="btn btn-ghost btn-small" type="button" data-copy>Скопировать ссылку</button>
+    </div>
+  </div>
 
   {% if quiz.outro %}
     <div class="card" style="margin-top:22px">
@@ -61,4 +84,8 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/share.js' %}" defer></script>
 {% endblock %}

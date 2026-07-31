@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}Архетип «{{ label }}» — {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ description }}{% endblock %}
+{% block og_title %}Архетип «{{ label }}»{% endblock %}
+{% block og_description %}{{ description }} Семь вопросов, чтобы узнать свой.{% endblock %}
+{% block og_image %}{{ share_image }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
+{% block content %}
+<div class="container quiz-shell">
+
+  <div class="center">
+    <div class="archetype-crest">✦</div>
+    <span class="eyebrow">Архетип</span>
+    <h1>{{ label }}</h1>
+    <p class="soft" style="font-size:1.1rem">{{ description }}</p>
+  </div>
+
+  {% comment %}
+    Страница открывается по ссылке из чужого чата, поэтому главное действие
+    здесь одно — пройти тест самому. Всё остальное ниже.
+  {% endcomment %}
+  <div class="card center" style="margin-top:34px">
+    <h3>А какой ведёт вас?</h3>
+    <p class="soft">
+      Семь вопросов, две минуты. В конце — разбор того, что у вас
+      получилось, и с чего начинать.
+    </p>
+    {% if quiz %}
+      <a class="btn" href="{{ quiz.get_absolute_url }}">Пройти тест</a>
+    {% else %}
+      <a class="btn" href="{% url 'quiz:list' %}">Пройти тест</a>
+    {% endif %}
+  </div>
+
+  {% if recommended %}
+    <h2 style="margin-top:44px">С чего начинают «{{ label }}»</h2>
+    <div class="grid grid-2">
+      {% for course in recommended %}
+        <a class="card card-link" href="{{ course.get_absolute_url }}">
+          <h3>{{ course.title }}</h3>
+          <p class="muted" style="margin:0">{{ course.description|plain|truncatewords:16 }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <h2 style="margin-top:44px">Другие архетипы</h2>
+  <div class="archetype-links">
+    {% for code, other_label in others %}
+      <a class="btn btn-ghost btn-small" href="{% url 'quiz:archetype' code %}">{{ other_label }}</a>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

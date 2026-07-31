@@ -653,6 +653,30 @@ textarea { min-height: 116px; resize: vertical; }
   padding: 48px 30px; text-align: center; color: var(--ink-muted);
 }
 
+/* --- Низ вопроса квиза, «поделиться», список архетипов ---------------------- */
+
+.quiz-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 14px; flex-wrap: wrap; font-size: .88rem; margin-top: 6px;
+}
+.quiz-back { color: var(--ink-muted); }
+.quiz-back:hover { color: var(--sage-deep); }
+
+/* Свой прошлый ответ при возврате назад — иначе выбираешь вслепую заново. */
+.option.is-chosen {
+  border-color: var(--sage);
+  background: var(--sage-wash);
+  color: var(--sage-deep);
+}
+
+.share-card {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 20px; flex-wrap: wrap; margin-top: 22px;
+}
+.share-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.archetype-links { display: flex; gap: 10px; flex-wrap: wrap; }
+
 /* --- Панель форматирования и оформленный текст ------------------------------- */
 
 .editor-bar {

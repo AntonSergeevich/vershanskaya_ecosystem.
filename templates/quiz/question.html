@@ -21,15 +21,22 @@
     {% csrf_token %}
     <div class="option-list">
       {% for option in options %}
-        <button class="option" type="submit" name="option" value="{{ option.pk }}">
+        <button class="option {% if option.pk == chosen_id %}is-chosen{% endif %}"
+                type="submit" name="option" value="{{ option.pk }}">
           {{ option.text }}
         </button>
       {% endfor %}
     </div>
   </form>
 
-  <p class="muted center" style="font-size:.88rem">
-    Прогресс сохраняется — можно вернуться позже с этого же места.
-  </p>
+  <div class="quiz-foot">
+    {% if previous_question %}
+      <a class="quiz-back"
+         href="{% url 'quiz:question_at' attempt.pk previous_question.order %}">← Назад</a>
+    {% else %}
+      <span></span>
+    {% endif %}
+    <span class="muted">Прогресс сохраняется — можно вернуться позже.</span>
+  </div>
 </div>
 {% endblock %}
