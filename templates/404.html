@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Страница не найдена — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow center">
+
+    <div class="archetype-crest">✻</div>
+    <h1>Такой страницы нет</h1>
+    <p class="soft">
+      Возможно, адрес изменился или в ссылке потерялся символ.
+      Ничего страшного — вот куда стоит заглянуть.
+    </p>
+
+    <div class="hero-actions" style="justify-content:center;margin-top:30px">
+      <a class="btn" href="{% url 'quiz:list' %}">Пройти тест на архетип</a>
+      <a class="btn btn-ghost" href="{% url 'core:landing' %}">На главную</a>
+    </div>
+
+    <p class="muted" style="margin-top:34px;font-size:.9rem">
+      <a href="{% url 'lms:courses' %}">Курсы</a> ·
+      <a href="{% url 'booking:slots' %}">Запись на разбор</a> ·
+      <a href="{% url 'payments:club' %}">Клуб «Творец»</a>
+    </p>
+
+  </div>
+</section>
+{% endblock %}

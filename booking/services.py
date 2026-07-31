@@ -1,6 +1,6 @@
 """Бронирование разборов: захват слота без двойных записей."""
 import logging
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -72,6 +72,49 @@ def cancel_booking(booking):
         f"❌ <b>Отмена записи</b>\n{booking.user.display_name} — "
         f"{timezone.localtime(slot.start_time):%d.%m.%Y %H:%M}")
     return booking
+
+
+def generate_slots(days=14, start_time=time(10, 0), end_time=time(18, 0),
+                   duration=30, weekdays=None, start_date=None):
+    """Нарезает окна по расписанию. Возвращает (создано, уже было).
+
+    Живёт в сервисах, а не в management-команде: то же самое нужно кнопке
+    «открыть неделю» в расписании Екатерины, а дублировать нарезку времени
+    в двух местах — верный способ получить два разных поведения.
+
+    weekdays — номера дней недели, 0 понедельник. None значит все семь:
+    у Екатерины бывают и субботние разборы.
+    """
+    if start_time >= end_time:
+        raise ValueError("Начало рабочего дня должно быть раньше конца.")
+
+    step = timedelta(minutes=duration)
+    allowed = set(range(7)) if weekdays is None else set(weekdays)
+    first_day = start_date or timezone.localdate()
+
+    created = existed = 0
+    for offset in range(days):
+        day = first_day + timedelta(days=offset)
+        if day.weekday() not in allowed:
+            continue
+
+        cursor = timezone.make_aware(datetime.combine(day, start_time))
+        day_end = timezone.make_aware(datetime.combine(day, end_time))
+
+        while cursor + step <= day_end:
+            # Прошедшее время не предлагаем: запуск в середине дня не должен
+            # наплодить окон «на утро».
+            if cursor <= timezone.now():
+                cursor += step
+                continue
+
+            _, is_new = BookingSlot.objects.get_or_create(
+                start_time=cursor, defaults={'end_time': cursor + step})
+            created += int(is_new)
+            existed += int(not is_new)
+            cursor += step
+
+    return created, existed
 
 
 def upcoming_slots(limit_days=21):

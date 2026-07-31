@@ -50,10 +50,13 @@
       <a href="{% url 'payments:club' %}">Клуб</a>
       <a href="{% url 'booking:slots' %}">Разбор</a>
       {% if user.is_authenticated %}
+        {% comment %}
+          Рабочие разделы — одной ссылкой. Четыре отдельных пункта раздували
+          меню до десяти и ломали логотип на три строки; со страницы «Дела»
+          воронка, студия и расписание всё равно в один клик.
+        {% endcomment %}
         {% if user.is_staff %}
           <a href="{% url 'crm:analytics' %}">Дела</a>
-          <a href="{% url 'crm:board' %}">Воронка</a>
-          <a href="{% url 'lms:studio' %}">Студия</a>
         {% endif %}
         <a href="{% url 'lms:dashboard' %}">Кабинет</a>
         <form action="{% url 'users:logout' %}" method="post" class="nav-logout">

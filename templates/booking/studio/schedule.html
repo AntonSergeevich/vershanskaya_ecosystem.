@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}Расписание — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <div class="studio-head">
+      <div>
+        <span class="eyebrow">Расписание</span>
+        <h1>Окна для разборов</h1>
+        <p class="soft">
+          {{ free_total|counted:"свободное окно,свободных окна,свободных окон" }}
+          {% if booked_total %}· {{ booked_total|counted:"запись,записи,записей" }}{% endif %}
+          за две недели с {{ start|date:"j E" }}
+        </p>
+      </div>
+      <div class="studio-actions">
+        {% if has_previous %}
+          <a class="btn btn-ghost btn-small" href="?ot={{ previous|date:'Y-m-d' }}">← Раньше</a>
+        {% endif %}
+        <a class="btn btn-ghost btn-small" href="?ot={{ following|date:'Y-m-d' }}">Позже →</a>
+      </div>
+    </div>
+
+    {% comment %}
+      Расписание сверху, формы снизу: заходят сюда чаще посмотреть и
+      закрыть день, чем нарезать новый период.
+    {% endcomment %}
+    {% for day in days %}
+      <div class="sched-day {% if day.is_weekend %}is-weekend{% endif %}">
+        <div class="sched-day-head">
+          <div>
+            <span class="sched-weekday">{{ day.weekday }}</span>
+            <span class="sched-date">{{ day.date|date:"j E" }}</span>
+            {% if day.date == today %}<span class="badge badge-gold">сегодня</span>{% endif %}
+          </div>
+          <form method="post" action="{% url 'booking:day_toggle' day.date|date:'Y-m-d' %}">
+            {% csrf_token %}
+            <input type="hidden" name="ot" value="{{ start|date:'Y-m-d' }}">
+            <button class="link-button" type="submit">закрыть / открыть день</button>
+          </form>
+        </div>
+
+        <div class="sched-slots">
+          {% for item in day.slots %}
+            {% if item.booking %}
+              {# Занятое окно не прячем и не удаляем: человек уже ждёт встречи. #}
+              <span class="sched-slot is-booked" title="Записан(а) {{ item.booking.user.display_name }}">
+                {{ item.slot.start_time|date:"H:i" }}
+                <em>{{ item.booking.user.display_name }}</em>
+              </span>
+            {% elif item.is_past %}
+              <span class="sched-slot is-past">{{ item.slot.start_time|date:"H:i" }}</span>
+            {% else %}
+              <form method="post" action="{% url 'booking:slot_toggle' item.slot.pk %}"
+                    class="sched-slot-form">
+                {% csrf_token %}
+                <input type="hidden" name="ot" value="{{ start|date:'Y-m-d' }}">
+                <button class="sched-slot {% if not item.slot.is_active %}is-hidden{% endif %}"
+                        type="submit"
+                        title="{% if item.slot.is_active %}Скрыть — не будет видно на сайте{% else %}Вернуть в продажу{% endif %}">
+                  {{ item.slot.start_time|date:"H:i" }}
+                </button>
+              </form>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="empty">
+        <p>На эти две недели окон нет.</p>
+        <p class="muted">Нарежьте их формой ниже — это займёт секунду.</p>
+      </div>
+    {% endfor %}
+
+    <p class="muted" style="font-size:.84rem;margin-top:20px">
+      Клик по времени прячет окно с сайта и возвращает обратно. Занятое
+      время не трогается — чтобы освободить его, отмените запись.
+    </p>
+
+    {# --- Формы --- #}
+    <div class="grid grid-2" style="margin-top:44px;align-items:start">
+
+      <form method="post" action="{% url 'booking:slots_generate' %}" class="card">
+        {% csrf_token %}
+        <input type="hidden" name="ot" value="{{ start|date:'Y-m-d' }}">
+        <h3>Нарезать окна на период</h3>
+        <p class="muted" style="font-size:.88rem">
+          Окна на уже занятое время не создаются — можно жать смело.
+        </p>
+
+        <div class="form-field">
+          <label for="gen-start">С какого дня</label>
+          <input id="gen-start" type="date" name="start" value="{{ start|date:'Y-m-d' }}">
+        </div>
+        <div class="form-field">
+          <label for="gen-days">На сколько дней вперёд</label>
+          <input id="gen-days" type="number" name="days" value="14" min="1" max="90">
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="gen-from">С</label>
+            <input id="gen-from" type="time" name="from" value="10:00">
+          </div>
+          <div class="form-field">
+            <label for="gen-to">До</label>
+            <input id="gen-to" type="time" name="to" value="18:00">
+          </div>
+          <div class="form-field">
+            <label for="gen-duration">Минут на разбор</label>
+            <input id="gen-duration" type="number" name="duration" value="30" min="5" max="480">
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>В какие дни недели</label>
+          <div class="weekday-picker">
+            {% for number, name in weekday_names %}
+              <label class="weekday">
+                <input type="checkbox" name="weekdays" value="{{ number }}"
+                       {% if number < 5 %}checked{% endif %}>
+                <span>{{ name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          <span class="helptext">
+            Суббота и воскресенье выключены по умолчанию — включите, если
+            принимаете по выходным.
+          </span>
+        </div>
+
+        <button class="btn btn-block" type="submit">Создать окна</button>
+      </form>
+
+      <form method="post" action="{% url 'booking:slot_add' %}" class="card">
+        {% csrf_token %}
+        <input type="hidden" name="ot" value="{{ start|date:'Y-m-d' }}">
+        <h3>Добавить одно окно</h3>
+        <p class="muted" style="font-size:.88rem">
+          Когда время не по общему расписанию: «приму в воскресенье в 11».
+        </p>
+
+        <div class="form-field">
+          <label for="one-date">Дата</label>
+          <input id="one-date" type="date" name="date" value="{{ start|date:'Y-m-d' }}" required>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="one-time">Время</label>
+            <input id="one-time" type="time" name="time" required>
+          </div>
+          <div class="form-field">
+            <label for="one-duration">Минут</label>
+            <input id="one-duration" type="number" name="duration" value="30" min="5" max="480">
+          </div>
+        </div>
+
+        <button class="btn btn-block" type="submit">Добавить</button>
+      </form>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

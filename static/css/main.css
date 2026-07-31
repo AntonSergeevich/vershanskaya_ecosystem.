@@ -653,6 +653,61 @@ textarea { min-height: 116px; resize: vertical; }
   padding: 48px 30px; text-align: center; color: var(--ink-muted);
 }
 
+/* --- Расписание в кабинете --------------------------------------------------- */
+
+.sched-day { border-bottom: 1px solid var(--line-soft); padding: 16px 0; }
+.sched-day.is-weekend { background: var(--sand); border-radius: var(--radius); padding: 16px; }
+
+.sched-day-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.sched-weekday {
+  display: inline-block; min-width: 30px; color: var(--ink-muted);
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .08em;
+}
+.sched-date { font-family: var(--serif); font-size: 1.05rem; }
+
+.sched-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.sched-slot-form { margin: 0; }
+
+.sched-slot {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 15px; border-radius: 13px;
+  border: 1px solid var(--line); background: var(--card);
+  color: var(--ink); font-size: .92rem; font-family: inherit;
+  cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+}
+button.sched-slot:hover { border-color: var(--clay); color: var(--clay); }
+
+/* Спрятанное окно: видно, что оно есть, но на сайте его нет. */
+.sched-slot.is-hidden {
+  background: transparent; color: var(--ink-muted);
+  border-style: dashed; text-decoration: line-through;
+}
+.sched-slot.is-booked {
+  background: var(--sage-wash); border-color: transparent; color: var(--sage-deep);
+  cursor: default;
+}
+.sched-slot.is-booked em { font-style: normal; font-size: .82rem; opacity: .8; }
+.sched-slot.is-past { opacity: .35; cursor: default; }
+
+.form-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.form-row .form-field { flex: 1 1 120px; }
+
+.weekday-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.weekday { position: relative; margin: 0; }
+.weekday input { position: absolute; opacity: 0; pointer-events: none; }
+.weekday span {
+  display: block; padding: 9px 14px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--card);
+  font-size: .88rem; color: var(--ink-muted); cursor: pointer;
+}
+.weekday input:checked + span {
+  border-color: var(--sage); background: var(--sage-wash); color: var(--sage-deep);
+}
+.weekday input:focus-visible + span { outline: 2px solid var(--sage); outline-offset: 2px; }
+
 /* --- Низ вопроса квиза, «поделиться», список архетипов ---------------------- */
 
 .quiz-foot {

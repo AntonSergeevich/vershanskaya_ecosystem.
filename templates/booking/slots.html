@@ -17,6 +17,10 @@
       </p>
     </div>
 
+    {% if user.is_staff %}
+      <p class="muted"><a href="{% url 'booking:schedule' %}">Открыть расписание →</a></p>
+    {% endif %}
+
     {% if my_bookings %}
       <div class="card" style="margin-bottom:34px">
         <h3>Вы уже записаны</h3>
