@@ -1,7 +1,9 @@
 """Кнопка «назад», превью ссылок и страница архетипа."""
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+from core.antibot import human_post
 
 from quiz.models import Answer, Option, Question, Quiz, QuizAttempt
 
@@ -123,6 +125,9 @@ class ArchetypePageTests(TestCase):
 
 class ShareOnResultTests(TestCase):
     def setUp(self):
+        # Счётчик отправок живёт в кэше и переживает отдельный тест:
+        # без очистки тесты начинают отнимать лимит друг у друга.
+        cache.clear()
         self.quiz = make_quiz(questions=1)
         self.client.post(reverse('quiz:start', args=[self.quiz.slug]))
         self.attempt = QuizAttempt.objects.get()
@@ -130,8 +135,9 @@ class ShareOnResultTests(TestCase):
         self.client.post(reverse('quiz:question', args=[self.attempt.pk]),
                          {'option': question.options.get(archetype='creator').pk})
         self.client.post(reverse('quiz:contact', args=[self.attempt.pk]),
-                         {'contact_name': 'Марина', 'contact_phone': '+79991234567',
-                          'contact_telegram': '', 'consent': 'on'})
+                         human_post({'contact_name': 'Марина',
+                                     'contact_phone': '+79991234567',
+                                     'contact_telegram': '', 'consent': 'on'}))
         self.attempt.refresh_from_db()
         assert self.attempt.is_completed, "квиз не завершился — тест ниже проверял бы редирект"
 

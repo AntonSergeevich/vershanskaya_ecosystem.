@@ -45,3 +45,15 @@ def requisites(request):
     return render(request, 'core/requisites.html', {
         'legal': LegalInfo.load(),
     })
+
+
+def robots(request):
+    """robots.txt. Собираем во вьюхе, чтобы домен подставлялся сам.
+
+    Захардкоженный домен — классическая ошибка деплоя: на тестовом сервере
+    он остаётся боевым, и поисковик уходит индексировать не тот сайт.
+    """
+    return render(request, 'robots.txt', {
+        'host': request.get_host(),
+        'scheme': request.scheme,
+    }, content_type='text/plain; charset=utf-8')

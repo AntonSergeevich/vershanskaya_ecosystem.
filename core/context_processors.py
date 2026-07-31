@@ -22,4 +22,7 @@ def brand(request):
         # Баннер показываем, пока согласие не сохранено в куке. Проверка на
         # сервере, а не в JS: иначе баннер моргает при каждой загрузке.
         'show_cookie_banner': request.COOKIES.get(COOKIE_CONSENT) != 'yes',
+        # Пусто, пока в .env нет ключей: тогда виджет капчи не рисуется,
+        # и у человека нет лишнего шага.
+        'captcha_key': settings.SMARTCAPTCHA_KEY if settings.SMARTCAPTCHA_SECRET else '',
     }

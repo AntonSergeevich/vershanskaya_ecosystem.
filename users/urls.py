@@ -9,12 +9,7 @@ app_name = 'users'
 # Работает только для тех, кто указал email; остальным на странице входа
 # предлагается Telegram, где пароля нет вовсе.
 password_reset = [
-    path('parol/', auth_views.PasswordResetView.as_view(
-        template_name='users/password_reset.html',
-        email_template_name='users/password_reset_email.txt',
-        subject_template_name='users/password_reset_subject.txt',
-        success_url=reverse_lazy('users:password_reset_done'),
-    ), name='password_reset'),
+    path('parol/', views.ThrottledPasswordReset.as_view(), name='password_reset'),
 
     path('parol/otpravleno/', auth_views.PasswordResetDoneView.as_view(
         template_name='users/password_reset_done.html',

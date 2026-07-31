@@ -375,6 +375,12 @@ textarea { min-height: 116px; resize: vertical; }
 
 .form-card { max-width: 470px; margin: 0 auto; }
 
+/* Ловушка для ботов: поле есть в разметке, но человек его не видит.
+   Не display:none и не hidden — часть скриптов такие поля пропускает,
+   а это поле должно выглядеть для них обычным. Подписи у него нет вовсе
+   (см. includes/_form_field.html), поэтому прятать нужно только input. */
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
 /* Вкладки «вход / регистрация» — на радиокнопках, без JavaScript. */
 .tabs {
   display: flex; gap: 6px; margin-bottom: 28px;

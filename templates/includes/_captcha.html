@@ -1,0 +1,15 @@
+{% comment %}
+Виджет Яндекс SmartCaptcha. Появляется только когда в .env заданы ключи —
+до этого форму защищают невидимые проверки из core/antibot.py, и лишнего
+шага у человека нет.
+
+Виджет сам кладёт ответ в поле с именем smart-token; это поле формы уже
+добавила HumanCheckMixin, поэтому здесь только контейнер и скрипт.
+{% endcomment %}
+{% if captcha_key %}
+  <div class="form-field">
+    <div id="captcha-container" class="smart-captcha"
+         data-sitekey="{{ captcha_key }}"></div>
+  </div>
+  <script src="https://smartcaptcha.yandexcloud.net/captcha.js" defer></script>
+{% endif %}

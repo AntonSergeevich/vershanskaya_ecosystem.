@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
 
     # Сторонние библиотеки
     'rest_framework',
@@ -180,6 +181,24 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@localhost')
+
+# Кэш. В проде — таблица в базе: она общая для всех процессов gunicorn,
+# и счётчик отправок с одного адреса считается по-настоящему, а не по разу
+# на каждый воркер. Таблица заводится командой createcachetable.
+if DEBUG:
+    CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_cache',
+        }
+    }
+
+# Яндекс SmartCaptcha — необязательная. Пока ключей нет, форма защищена
+# невидимыми проверками (см. core/antibot.py), и капча не показывается.
+SMARTCAPTCHA_KEY = os.getenv('SMARTCAPTCHA_KEY', '')
+SMARTCAPTCHA_SECRET = os.getenv('SMARTCAPTCHA_SECRET', '')
 
 # Разбор цифр в кабинете. Без ключа выводы считаются по правилам —
 # кабинет работает и без ИИ.

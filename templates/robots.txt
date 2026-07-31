@@ -1,0 +1,24 @@
+{% comment %}
+Закрываем всё, за чем стоит вход или что не имеет смысла в выдаче.
+Секретом это не является — robots.txt открыт всем и защитой не работает,
+доступ проверяется во вьюхах. Здесь только просьба не тратить обход на
+страницы, которые всё равно ответят редиректом на форму входа.
+
+Clean-param — для Яндекса: метки из рекламы плодят копии одной страницы,
+/?utm_source=vk и / для поисковика два разных адреса с одним текстом.
+{% endcomment %}User-agent: *
+Disallow: /admin/
+Disallow: /profil/
+Disallow: /voronka/
+Disallow: /obuchenie/kabinet/
+Disallow: /obuchenie/video/
+Disallow: /obuchenie/kursy/studiya/
+Disallow: /razbor/raspisanie/
+Disallow: /razbor/zapis/
+Disallow: /kviz/shag/
+Disallow: /oplata/
+Disallow: /webhook/
+Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term
+
+Host: {{ host }}
+Sitemap: {{ scheme }}://{{ host }}/sitemap.xml

@@ -4,8 +4,10 @@ from urllib.parse import urlparse
 
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+from core.antibot import human_post
 from django.utils import timezone
 
 from users.models import Subscription
@@ -112,8 +114,14 @@ class SubscriptionTests(TestCase):
 
 
 class AuthFlowTests(TestCase):
+    def setUp(self):
+        # Счётчик отправок живёт в кэше и переживает отдельный тест: без
+        # очистки тесты начинают отнимать лимит друг у друга.
+        cache.clear()
+
     def test_registration_creates_user_and_logs_in(self):
         response = self.client.post(reverse('users:enter'), {
+            **human_post(),
             'action': 'register',
             'first_name': 'Ольга',
             'phone': '+7 999 000 11 22',
@@ -140,6 +148,7 @@ class AuthFlowTests(TestCase):
         """Учётку, созданную квизом, человек может «присвоить», задав пароль."""
         lead = find_or_create_lead_user(phone='+79990001122', name='Ольга')
         response = self.client.post(reverse('users:enter'), {
+            **human_post(),
             'action': 'register',
             'first_name': 'Ольга',
             'phone': '+79990001122',
@@ -157,6 +166,7 @@ class AuthFlowTests(TestCase):
         user.save()
 
         response = self.client.post(reverse('users:enter'), {
+            **human_post(),
             'action': 'register',
             'first_name': 'Чужой',
             'phone': '+79990001122',

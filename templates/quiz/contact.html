@@ -22,6 +22,7 @@
     {% for field in form %}
       {% include 'includes/_form_field.html' with field=field %}
     {% endfor %}
+    {% include 'includes/_captcha.html' %}
     <button class="btn btn-block" type="submit">Показать результат</button>
   </form>
 

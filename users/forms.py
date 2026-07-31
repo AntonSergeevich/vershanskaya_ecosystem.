@@ -7,6 +7,8 @@ from django import forms
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 
+from core.antibot import HumanCheckMixin
+
 from .utils import normalize_phone, unique_username
 
 User = get_user_model()
@@ -60,7 +62,7 @@ class LoginForm(AuthenticationForm):
         return usernames
 
 
-class RegisterForm(forms.ModelForm):
+class RegisterForm(HumanCheckMixin, forms.ModelForm):
     """Регистрация по имени и телефону: минимум полей — меньше отвалов."""
     first_name = forms.CharField(label="Как вас зовут", max_length=150)
     # data-phone включает маску «+7 (999) 123-45-67» из static/js/phone.js.

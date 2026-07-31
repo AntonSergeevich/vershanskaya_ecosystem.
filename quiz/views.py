@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
 
+from core import antibot
 from core.constants import ARCHETYPE_CHOICES, ARCHETYPE_DESCRIPTIONS, ARCHETYPE_LABELS
 from lms.services import visible_courses
 
@@ -133,7 +134,13 @@ def contact(request, pk):
             'contact_phone': request.user.phone or '',
         }
 
-    form = ContactForm(request.POST or None, initial=initial)
+    form = ContactForm(request.POST or None, initial=initial, request=request)
+
+    if request.method == 'POST' and antibot.too_many(request, 'kontakty', limit=30):
+        messages.error(request, "Слишком много попыток. Попробуйте позже "
+                                "или напишите в Telegram.")
+        return redirect('quiz:contact', pk=attempt.pk)
+
     if request.method == 'POST' and form.is_valid():
         attempt.contact_name = form.cleaned_data['contact_name']
         attempt.contact_phone = form.cleaned_data['contact_phone']

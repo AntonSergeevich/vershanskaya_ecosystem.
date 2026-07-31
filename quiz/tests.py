@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+from core.antibot import human_post
 
 from core.constants import ARCHETYPE_CREATOR, ARCHETYPE_SAGE
 from crm.models import CRMLead
@@ -79,6 +81,9 @@ class ScoringTests(QuizFixtureMixin, TestCase):
 
 class FunnelFlowTests(QuizFixtureMixin, TestCase):
     def setUp(self):
+        # Счётчик отправок живёт в кэше и переживает отдельный тест:
+        # без очистки тесты начинают отнимать лимит друг у друга.
+        cache.clear()
         self.quiz = self.build_quiz(questions=2)
 
     def start_attempt(self):
@@ -95,6 +100,7 @@ class FunnelFlowTests(QuizFixtureMixin, TestCase):
         self.answer_all(attempt)
 
         response = self.client.post(reverse('quiz:contact', args=[attempt.pk]), {
+            **human_post(),
             'contact_name': 'Марина',
             'contact_phone': '89991234567',
             'consent': 'on',
@@ -116,7 +122,7 @@ class FunnelFlowTests(QuizFixtureMixin, TestCase):
         attempt = self.start_attempt()
         self.answer_all(attempt)
         response = self.client.post(reverse('quiz:contact', args=[attempt.pk]),
-                                    {'contact_name': 'Марина', 'consent': 'on'})
+                                    human_post({'contact_name': 'Марина', 'consent': 'on'}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Оставьте телефон или Telegram')
         self.assertFalse(QuizAttempt.objects.get().is_completed)
@@ -156,6 +162,8 @@ class FunnelFlowTests(QuizFixtureMixin, TestCase):
         self.assertEqual(attempt.user, user)
         self.answer_all(attempt)
         self.client.post(reverse('quiz:contact', args=[attempt.pk]), {
+            **human_post(),
+            **human_post(),
             'contact_name': 'Марина', 'contact_phone': '+79990000000', 'consent': 'on'})
 
         self.assertEqual(User.objects.count(), 1)

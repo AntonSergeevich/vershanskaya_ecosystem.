@@ -24,6 +24,11 @@ $PYTHON manage.py makemigrations --check --dry-run
 echo "→ Применяю миграции"
 $PYTHON manage.py migrate --noinput
 
+echo "→ Проверяю таблицу кэша"
+# Кэш держит счётчик отправок форм. Команда идемпотентна: если таблица уже
+# есть, она просто скажет об этом и ничего не сломает.
+$PYTHON manage.py createcachetable
+
 echo "→ Собираю статику"
 $PYTHON manage.py collectstatic --noinput
 

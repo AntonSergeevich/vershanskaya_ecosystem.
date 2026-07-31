@@ -1,7 +1,15 @@
 {% comment %}
 Одно поле формы. Вынесено отдельно, чтобы разметка ошибок и подсказок
 была одинаковой на всех страницах.
+
+Скрытые поля (метка времени формы, ответ капчи) выводим без обёртки:
+подпись над пустым местом человеку ни о чём не говорит.
+
+Ловушку для ботов — тоже без обёртки и без подписи. Само поле уводят за
+экран стили, но если положиться на то, что браузер спрячет и обёртку, в
+старом браузере подпись «Не заполняйте это поле» окажется на виду.
 {% endcomment %}
+{% if field.is_hidden or 'trap' in field.field.widget.attrs.class %}{{ field }}{% else %}
 <div class="form-field {% if field.field.widget.input_type == 'checkbox' %}checkbox-field{% endif %}">
   {% if field.field.widget.input_type == 'checkbox' %}
     {{ field }}
@@ -13,3 +21,4 @@
   {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
   {{ field.errors }}
 </div>
+{% endif %}

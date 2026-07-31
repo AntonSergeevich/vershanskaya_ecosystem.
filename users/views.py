@@ -1,11 +1,13 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from core import antibot
 from crm import services as crm
 from lms.models import LessonProgress
 
@@ -33,13 +35,20 @@ def enter(request):
     странице, и при ошибке должна «раскрыться» именно та, что заполняли.
     """
     login_form = LoginForm(request=request)
-    register_form = RegisterForm()
+    register_form = RegisterForm(request=request)
     active = 'login'
 
     if request.method == 'POST':
+        # Ограничение по адресу: регистрация заводит учётки, вход перебирает
+        # пароли — и то и другое интересно скриптам, а не людям.
+        action = 'registraciya' if request.POST.get('action') == 'register' else 'vhod'
+        if antibot.too_many(request, action, limit=20 if action == 'registraciya' else 40):
+            messages.error(request, "Слишком много попыток. Попробуйте позже.")
+            return redirect('users:enter')
+
         if request.POST.get('action') == 'register':
             active = 'register'
-            register_form = RegisterForm(request.POST)
+            register_form = RegisterForm(request.POST, request=request)
             if register_form.is_valid():
                 user = register_form.save()
                 login(request, user)
@@ -114,3 +123,23 @@ def profile(request):
         'attempts': (request.user.quiz_attempts
                      .filter(is_completed=True).select_related('quiz')[:5]),
     })
+
+
+class ThrottledPasswordReset(auth_views.PasswordResetView):
+    """Восстановление пароля с ограничением по адресу.
+
+    Форма отправляет письмо на любой введённый адрес. Без ограничения
+    через неё можно заваливать чужой ящик письмами с нашего домена — и
+    домен быстро окажется в спаме у всех.
+    """
+    template_name = 'users/password_reset.html'
+    email_template_name = 'users/password_reset_email.txt'
+    subject_template_name = 'users/password_reset_subject.txt'
+    success_url = reverse_lazy('users:password_reset_done')
+
+    def post(self, request, *args, **kwargs):
+        if antibot.too_many(request, 'sbros-parolya', limit=10):
+            messages.error(request, "Слишком много писем на этот адрес. "
+                                    "Попробуйте через час.")
+            return redirect('users:password_reset')
+        return super().post(request, *args, **kwargs)

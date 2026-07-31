@@ -1,9 +1,10 @@
 from django import forms
 
+from core.antibot import HumanCheckMixin
 from users.utils import normalize_phone, normalize_telegram
 
 
-class ContactForm(forms.Form):
+class ContactForm(HumanCheckMixin, forms.Form):
     """Последний шаг квиза: контакты в обмен на результат.
 
     Результат уже посчитан — человек «в одном клике» от ответа, и это самый
