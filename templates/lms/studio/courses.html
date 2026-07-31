@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}Студия курсов — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <div class="studio-head">
+      <div>
+        <span class="eyebrow">Студия</span>
+        <h1>Курсы</h1>
+        <p class="soft">Здесь собирается всё обучение: разделы, уроки, видео и тексты.</p>
+      </div>
+      <a class="btn" href="{% url 'lms:studio_course_create' %}">Новый курс</a>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:34px">
+      {% for course in courses %}
+        <a class="card card-link studio-card" href="{% url 'lms:studio_course' course.pk %}">
+          <div class="studio-card-top">
+            <h3>{{ course.title }}</h3>
+            <span class="badge {% if course.is_published %}badge-green{% else %}badge-muted{% endif %}">
+              {% if course.is_published %}опубликован{% else %}черновик{% endif %}
+            </span>
+          </div>
+          <p class="muted">{{ course.description|truncatewords:18 }}</p>
+          <p class="studio-card-meta">
+            {{ course.lessons_total|counted:"урок,урока,уроков" }}
+            · {{ course.get_access_level_display }}
+          </p>
+        </a>
+      {% empty %}
+        <div class="empty">
+          <p>Курсов пока нет.</p>
+          <p class="muted">Начните с бесплатного — он открывает воронку для уровня «Искатель».</p>
+          <a class="btn btn-small" href="{% url 'lms:studio_course_create' %}">Создать курс</a>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

@@ -31,6 +31,7 @@
         {% if user.is_staff %}
           <a href="{% url 'crm:analytics' %}">Дела</a>
           <a href="{% url 'crm:board' %}">Воронка</a>
+          <a href="{% url 'lms:studio' %}">Студия</a>
         {% endif %}
         <a href="{% url 'lms:dashboard' %}">Кабинет</a>
         <form action="{% url 'users:logout' %}" method="post" class="nav-logout">

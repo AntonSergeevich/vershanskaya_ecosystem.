@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if module %}{{ module.title }}{% else %}Новый раздел{% endif %} — студия{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+
+    <p class="muted">
+      <a href="{% url 'lms:studio_course' course.pk %}">← {{ course.title }}</a>
+    </p>
+
+    <span class="eyebrow">Раздел</span>
+    <h1 style="font-size:2.2rem">
+      {% if module %}{{ module.title }}{% else %}Новый раздел{% endif %}
+    </h1>
+    <p class="soft">
+      Разделы нужны длинным курсам, чтобы программа не выглядела
+      бесконечным списком. Короткому курсу они не нужны.
+    </p>
+
+    <form method="post" class="card" novalidate style="margin-top:30px">
+      {% csrf_token %}
+      {% for field in form %}
+        {% include 'includes/_form_field.html' with field=field %}
+      {% endfor %}
+      <button class="btn" type="submit">Сохранить</button>
+    </form>
+
+  </div>
+</section>
+{% endblock %}

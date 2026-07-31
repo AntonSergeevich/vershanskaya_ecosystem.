@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if lesson %}{{ lesson.title }}{% else %}Новый урок{% endif %} — студия{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container narrow">
+
+    <p class="muted">
+      <a href="{% url 'lms:studio_course' course.pk %}">← {{ course.title }}</a>
+    </p>
+
+    <span class="eyebrow">Урок</span>
+    <h1 style="font-size:2.2rem">
+      {% if lesson %}{{ lesson.title }}{% else %}Новый урок{% endif %}
+    </h1>
+
+    {% if lesson and lesson.video_file %}
+      {% comment %}
+        Видео лежит вне публичной папки, прямой ссылки у него нет — смотрим
+        через ту же вьюху, что и ученики.
+      {% endcomment %}
+      <div class="video-frame" style="margin:24px 0">
+        <video controls preload="metadata" src="{% url 'lms:lesson_video' lesson.pk %}"></video>
+      </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="card" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        {% include 'includes/_form_field.html' with field=field %}
+      {% endfor %}
+
+      <p class="helptext" style="margin:-6px 0 20px">
+        Видео можно либо загрузить файлом — тогда его увидят только те, у кого
+        есть доступ к курсу, — либо вставить ссылку на внешнюю платформу.
+        Загрузка большого файла идёт долго: не закрывайте страницу.
+      </p>
+
+      <button class="btn" type="submit">
+        {% if lesson %}Сохранить{% else %}Добавить урок{% endif %}
+      </button>
+    </form>
+
+    {% if lesson %}
+      <p class="muted" style="margin-top:26px;font-size:.86rem">
+        <a class="danger-link" href="{% url 'lms:studio_lesson_delete' lesson.pk %}">Удалить урок</a>
+      </p>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

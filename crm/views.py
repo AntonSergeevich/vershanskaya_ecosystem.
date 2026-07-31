@@ -1,9 +1,9 @@
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from core.decorators import staff_required
 from core.services.analytics import dashboard_data
 from core.services.insights import ai_enabled, insights
 
@@ -11,7 +11,7 @@ from . import services
 from .models import CRMLead
 
 
-@staff_member_required
+@staff_required
 def analytics(request):
     """Кабинет Екатерины: деньги, клуб, воронка и разборы на одной странице."""
     data = dashboard_data()
@@ -22,7 +22,7 @@ def analytics(request):
     })
 
 
-@staff_member_required
+@staff_required
 def board(request):
     """Канбан-доска воронки. Только для сотрудников — здесь видны контакты."""
     return render(request, 'crm/board.html', {
@@ -31,7 +31,7 @@ def board(request):
     })
 
 
-@staff_member_required
+@staff_required
 @require_POST
 def move_lead(request, pk):
     """Перенос карточки между колонками.
@@ -50,7 +50,7 @@ def move_lead(request, pk):
     return redirect('crm:board')
 
 
-@staff_member_required
+@staff_required
 def lead_detail(request, pk):
     """Карточка лида: контакты, архетип, история касаний."""
     lead = get_object_or_404(CRMLead.objects.select_related('user'), pk=pk)

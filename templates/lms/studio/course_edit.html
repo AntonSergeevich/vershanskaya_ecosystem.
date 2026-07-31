@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load ru %}
+
+{% block title %}{{ course.title }} — студия{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <p class="muted"><a href="{% url 'lms:studio' %}">← Все курсы</a></p>
+
+    <div class="studio-head">
+      <div>
+        <span class="eyebrow">Студия</span>
+        <h1 style="font-size:2.2rem">{{ course.title }}</h1>
+        <p class="soft">
+          {{ lessons|length|counted:"урок,урока,уроков" }}
+          {% if students %}· {{ students|counted:"человек начал,человека начали,человек начали" }}{% endif %}
+        </p>
+      </div>
+      {% if course.is_published %}
+        <a class="btn btn-ghost" href="{{ course.get_absolute_url }}">Посмотреть глазами ученика</a>
+      {% endif %}
+    </div>
+
+    {# --- Программа: главное, ради чего сюда заходят --- #}
+    <div class="studio-section-head">
+      <h2 style="margin:0">Программа</h2>
+      <div class="studio-actions">
+        <a class="btn btn-small" href="{% url 'lms:studio_lesson_create' course.pk %}">Добавить урок</a>
+        <a class="btn btn-ghost btn-small" href="{% url 'lms:studio_module_create' course.pk %}">Добавить раздел</a>
+      </div>
+    </div>
+
+    {% if lessons %}
+      <ul class="lesson-list studio-list">
+        {% for lesson in lessons %}
+          <li class="lesson-row">
+            <span class="lesson-index">{{ forloop.counter }}</span>
+            <span class="lesson-title">
+              <a href="{% url 'lms:studio_lesson' lesson.pk %}">{{ lesson.title }}</a>
+              <span class="studio-row-meta">
+                {% if lesson.module %}{{ lesson.module.title }} · {% endif %}
+                {% if lesson.video_file %}видео на сайте
+                {% elif lesson.video_url %}видео по ссылке
+                {% else %}без видео{% endif %}
+                {% if lesson.duration_minutes %} · {{ lesson.duration_minutes }} мин{% endif %}
+                {% if lesson.is_preview %} · <span class="badge badge-gold">открыт всем</span>{% endif %}
+              </span>
+            </span>
+
+            {% comment %}
+              Стрелки — формы, а не ссылки: перестановка меняет данные, и
+              GET-ссылку мог бы «нажать» любой предзагрузчик браузера.
+            {% endcomment %}
+            <span class="studio-move">
+              <form method="post" action="{% url 'lms:studio_lesson_move' lesson.pk 'vverh' %}">
+                {% csrf_token %}
+                <button class="icon-button" type="submit" title="Выше"
+                        {% if forloop.first %}disabled{% endif %}>↑</button>
+              </form>
+              <form method="post" action="{% url 'lms:studio_lesson_move' lesson.pk 'vniz' %}">
+                {% csrf_token %}
+                <button class="icon-button" type="submit" title="Ниже"
+                        {% if forloop.last %}disabled{% endif %}>↓</button>
+              </form>
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty">
+        <p>В курсе пока нет уроков.</p>
+        <a class="btn btn-small" href="{% url 'lms:studio_lesson_create' course.pk %}">Добавить первый</a>
+      </div>
+    {% endif %}
+
+    {% if modules %}
+      <h3 style="margin-top:40px">Разделы</h3>
+      <ul class="lesson-list studio-list">
+        {% for module in modules %}
+          <li class="lesson-row">
+            <span class="lesson-title">
+              <a href="{% url 'lms:studio_module' module.pk %}">{{ module.title }}</a>
+              <span class="studio-row-meta">{{ module.lessons.count|counted:"урок,урока,уроков" }}</span>
+            </span>
+            <form method="post" action="{% url 'lms:studio_module_delete' module.pk %}">
+              {% csrf_token %}
+              <button class="icon-button" type="submit" title="Удалить раздел">✕</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {# --- Настройки курса --- #}
+    <h2 style="margin-top:56px">Настройки курса</h2>
+    <form method="post" enctype="multipart/form-data" class="card" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        {% include 'includes/_form_field.html' with field=field %}
+      {% endfor %}
+      <button class="btn" type="submit">Сохранить</button>
+    </form>
+
+    <p class="muted" style="margin-top:26px;font-size:.86rem">
+      <a class="danger-link" href="{% url 'lms:studio_course_delete' course.pk %}">Удалить курс</a>
+    </p>
+
+  </div>
+</section>
+{% endblock %}

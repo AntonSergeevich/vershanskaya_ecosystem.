@@ -366,9 +366,12 @@ textarea { min-height: 116px; resize: vertical; }
 
 .helptext { display: block; font-size: .82rem; color: var(--ink-muted); margin-top: 6px; }
 .errorlist { list-style: none; margin: 8px 0 0; padding: 0; color: #b5564a; font-size: .87rem; }
-.checkbox-field { display: flex; gap: 11px; align-items: flex-start; }
+.checkbox-field { display: flex; gap: 11px; align-items: flex-start; flex-wrap: wrap; }
 .checkbox-field input { width: auto; margin-top: 6px; }
 .checkbox-field label { margin: 0; }
+/* Подсказку уводим под галочку: иначе она встаёт третьей колонкой сбоку
+   и подпись самой галочки ломается на две строки. */
+.checkbox-field .helptext { flex-basis: 100%; margin: 2px 0 0 28px; }
 
 .form-card { max-width: 470px; margin: 0 auto; }
 
@@ -649,6 +652,47 @@ textarea { min-height: 116px; resize: vertical; }
   border-radius: var(--radius);
   padding: 48px 30px; text-align: center; color: var(--ink-muted);
 }
+
+/* --- Студия курсов ---------------------------------------------------------- */
+
+.studio-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 20px; flex-wrap: wrap;
+}
+.studio-head h1 { font-size: 2.2rem; margin-bottom: 4px; }
+.studio-head p { margin: 0; }
+
+.studio-section-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; flex-wrap: wrap; margin: 52px 0 18px;
+}
+.studio-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.studio-card-top {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+.studio-card-top h3 { margin: 0 0 8px; }
+.studio-card-meta { margin: 0; font-size: .85rem; color: var(--ink-muted); }
+
+.studio-list .lesson-row { align-items: center; }
+.studio-row-meta {
+  display: block; font-size: .8rem; color: var(--ink-muted); margin-top: 3px;
+}
+.studio-move { display: flex; gap: 6px; }
+.studio-move form { margin: 0; }
+
+/* Стрелки перестановки: кнопка формы, но выглядит как иконка. */
+.icon-button {
+  width: 34px; height: 34px; border-radius: 11px;
+  border: 1px solid var(--line); background: var(--card);
+  color: var(--ink-soft); font-size: 1rem; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.icon-button:hover:not(:disabled) { border-color: var(--sage); color: var(--sage-deep); }
+.icon-button:disabled { opacity: .35; cursor: default; }
+
+.danger-link { color: #b5564a; }
+.danger-link:hover { color: #94443a; }
 
 /* --- Правовые документы ----------------------------------------------------- */
 
