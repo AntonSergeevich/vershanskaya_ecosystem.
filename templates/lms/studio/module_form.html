@@ -6,6 +6,8 @@
 <section class="section">
   <div class="container narrow">
 
+    {% include 'includes/_workbar.html' with section='studiya' %}
+
     <p class="muted">
       <a href="{% url 'lms:studio_course' course.pk %}">← {{ course.title }}</a>
     </p>

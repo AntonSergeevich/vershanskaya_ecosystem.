@@ -5,6 +5,8 @@
 {% block content %}
 <section class="section">
   <div class="container">
+
+    {% include 'includes/_workbar.html' with section='voronka' %}
     <p class="muted"><a href="{% url 'crm:board' %}">← К воронке</a></p>
     <h1 style="font-size:2rem">{{ lead.user.display_name }}</h1>
     <p>

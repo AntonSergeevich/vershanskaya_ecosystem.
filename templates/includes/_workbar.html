@@ -1,0 +1,22 @@
+{% comment %}
+Панель рабочих разделов. Включается на КАЖДОЙ странице кабинета, а не
+только на «Делах»: иначе с любой из них некуда вернуться и непонятно, где
+находишься.
+
+Текущий раздел приходит параметром section — по нему подсвечивается вкладка:
+    {% templatetag openblock %} include 'includes/_workbar.html' with section='voronka' {% templatetag closeblock %}
+{% endcomment %}
+<nav class="workbar" aria-label="Разделы кабинета">
+  <a class="workbar-item {% if section == 'dela' %}is-current{% endif %}"
+     href="{% url 'crm:analytics' %}"
+     {% if section == 'dela' %}aria-current="page"{% endif %}>Дела</a>
+  <a class="workbar-item {% if section == 'voronka' %}is-current{% endif %}"
+     href="{% url 'crm:board' %}"
+     {% if section == 'voronka' %}aria-current="page"{% endif %}>Воронка</a>
+  <a class="workbar-item {% if section == 'studiya' %}is-current{% endif %}"
+     href="{% url 'lms:studio' %}"
+     {% if section == 'studiya' %}aria-current="page"{% endif %}>Студия курсов</a>
+  <a class="workbar-item {% if section == 'raspisanie' %}is-current{% endif %}"
+     href="{% url 'booking:schedule' %}"
+     {% if section == 'raspisanie' %}aria-current="page"{% endif %}>Расписание</a>
+</nav>

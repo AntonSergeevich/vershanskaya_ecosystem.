@@ -7,15 +7,12 @@
 <section class="section">
   <div class="container">
 
+    {% include 'includes/_workbar.html' with section='dela' %}
+
     <span class="eyebrow">Кабинет</span>
     <h1>Как идут дела</h1>
-    <p class="soft">
-      <a href="{% url 'crm:board' %}">Перейти к воронке →</a>
-      &nbsp;·&nbsp;
-      <a href="{% url 'lms:studio' %}">Студия курсов →</a>
-      &nbsp;·&nbsp;
-      <a href="{% url 'booking:schedule' %}">Расписание →</a>
-    </p>
+    {# Ссылки на разделы теперь в панели выше — здесь они дублировались. #}
+    <p class="soft">Деньги, клуб, воронка и разборы за последний месяц.</p>
 
     {# --- Главные цифры --- #}
     <div class="grid grid-3" style="margin-top:34px">

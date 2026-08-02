@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, BookingSlot
@@ -104,3 +105,57 @@ class StaffOutOfTheNumbersTests(TestCase):
         QuizAttempt.objects.create(quiz=quiz, user=self.ekaterina)
 
         self.assertEqual(funnel_summary()['attempts'], 2)
+
+
+class WorkbarTests(TestCase):
+    """С любой рабочей страницы должно быть видно, где ты и куда идти дальше.
+
+    Раньше ссылки на разделы жили только на «Делах», и с воронки, студии
+    или расписания вернуться было некуда.
+    """
+
+    def setUp(self):
+        self.client.force_login(User.objects.create(username='ekaterina', is_staff=True))
+
+    def pages(self):
+        from lms.models import Course
+
+        course = Course.objects.create(title='Путь', slug='put', description='')
+        lead = CRMLead.objects.create(user=User.objects.create(username='marina'))
+        return {
+            'crm:analytics': [],
+            'crm:board': [],
+            'crm:lead': [lead.pk],
+            'lms:studio': [],
+            'lms:studio_course_create': [],
+            'lms:studio_course': [course.pk],
+            'lms:studio_lesson_create': [course.pk],
+            'lms:studio_module_create': [course.pk],
+            'booking:schedule': [],
+        }
+
+    def test_every_staff_page_carries_the_section_bar(self):
+        for name, args in self.pages().items():
+            with self.subTest(page=name):
+                response = self.client.get(reverse(name, args=args))
+                self.assertContains(response, 'class="workbar"')
+
+    def test_every_section_is_reachable_from_every_page(self):
+        targets = [reverse('crm:analytics'), reverse('crm:board'),
+                   reverse('lms:studio'), reverse('booking:schedule')]
+
+        for name, args in self.pages().items():
+            page = self.client.get(reverse(name, args=args)).content.decode()
+            for target in targets:
+                with self.subTest(page=name, target=target):
+                    self.assertIn(f'href="{target}"', page)
+
+    def test_the_current_section_is_marked(self):
+        """Иначе непонятно, где находишься."""
+        for name, section in (('crm:board', 'Воронка'),
+                              ('lms:studio', 'Студия курсов'),
+                              ('booking:schedule', 'Расписание')):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(name))
+                self.assertContains(response, 'workbar-item is-current')
+                self.assertContains(response, 'aria-current="page"')

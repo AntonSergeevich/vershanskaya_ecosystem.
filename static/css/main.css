@@ -659,6 +659,24 @@ textarea { min-height: 116px; resize: vertical; }
   padding: 48px 30px; text-align: center; color: var(--ink-muted);
 }
 
+/* --- Панель разделов кабинета ------------------------------------------------ */
+
+.workbar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 30px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.workbar-item {
+  padding: 9px 18px; border-radius: 999px;
+  border: 1px solid transparent; background: var(--sand);
+  color: var(--ink-soft); font-size: .92rem; white-space: nowrap;
+}
+.workbar-item:hover { color: var(--ink); background: var(--blush); }
+.workbar-item.is-current {
+  background: var(--sage); color: #fff;
+}
+.workbar-item.is-current:hover { background: var(--sage-deep); color: #fff; }
+
 /* --- Расписание в кабинете --------------------------------------------------- */
 
 .sched-day { border-bottom: 1px solid var(--line-soft); padding: 16px 0; }
