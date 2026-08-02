@@ -91,6 +91,16 @@ class LegalInfo(models.Model):
     phone = models.CharField("Телефон", max_length=20, blank=True)
     site_url = models.URLField("Адрес сайта", blank=True,
                                help_text="Подставляется в тексты документов.")
+
+    # Банковские реквизиты. Нужны в оферте и для оплаты по счёту: иногда
+    # клуб покупают сотруднику и платят переводом от компании.
+    bank_account = models.CharField("Расчётный счёт", max_length=20, blank=True)
+    bank_name = models.CharField("Банк", max_length=255, blank=True)
+    bank_inn = models.CharField("ИНН банка", max_length=12, blank=True)
+    bank_bik = models.CharField("БИК банка", max_length=9, blank=True)
+    bank_corr_account = models.CharField("Корреспондентский счёт", max_length=20, blank=True)
+    bank_address = models.CharField("Адрес банка", max_length=255, blank=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -124,7 +134,15 @@ class LegalInfo(models.Model):
             '{EMAIL}': self.email or '—',
             '{ТЕЛЕФОН}': self.phone or '—',
             '{САЙТ}': self.site_url or '—',
+            '{РАССЧЕТНЫЙ_СЧЕТ}': self.bank_account or '—',
+            '{БАНК}': self.bank_name or '—',
+            '{БИК}': self.bank_bik or '—',
+            '{КОРСЧЕТ}': self.bank_corr_account or '—',
         }
+
+    @property
+    def has_bank_details(self):
+        return bool(self.bank_account and self.bank_bik)
 
 
 class LegalPage(models.Model):

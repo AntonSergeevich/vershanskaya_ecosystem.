@@ -25,6 +25,32 @@
           {% endif %}
         </table>
       </div>
+
+      {% if legal.has_bank_details %}
+        {% comment %}
+          Банковские реквизиты отдельной карточкой: их смотрят, только когда
+          собираются платить по счёту, а не когда ищут ИНН продавца.
+        {% endcomment %}
+        <h2 style="margin-top:44px">Банковские реквизиты</h2>
+        <div class="card">
+          <table class="table">
+            <tr><th>Расчётный счёт</th><td>{{ legal.bank_account }}</td></tr>
+            <tr><th>Банк</th><td>{{ legal.bank_name }}</td></tr>
+            {% if legal.bank_bik %}<tr><th>БИК</th><td>{{ legal.bank_bik }}</td></tr>{% endif %}
+            {% if legal.bank_corr_account %}
+              <tr><th>Корр. счёт</th><td>{{ legal.bank_corr_account }}</td></tr>
+            {% endif %}
+            {% if legal.bank_inn %}<tr><th>ИНН банка</th><td>{{ legal.bank_inn }}</td></tr>{% endif %}
+            {% if legal.bank_address %}
+              <tr><th>Адрес банка</th><td>{{ legal.bank_address }}</td></tr>
+            {% endif %}
+          </table>
+        </div>
+        <p class="muted" style="font-size:.88rem;margin-top:14px">
+          Оплата по счёту нужна компаниям, которые оформляют доступ сотруднику.
+          Обычная оплата картой проходит на сайте и реквизитов не требует.
+        </p>
+      {% endif %}
     {% else %}
       <div class="empty">
         <p>Реквизиты пока не заполнены.</p>

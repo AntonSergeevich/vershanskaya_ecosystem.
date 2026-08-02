@@ -209,6 +209,26 @@ YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID', '')
 YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY', '')
 PRODAMUS_FORM_URL = os.getenv('PRODAMUS_FORM_URL', '')
 
+# GetPlatinum. Ссылка на форму берётся из их кабинета, секрет — наш
+# собственный: он стоит прямо в адресе уведомления и подтверждает, что
+# уведомление пришло от них. Подробности — в payments/getplatinum.py.
+GETPLATINUM_FORM_URL = os.getenv('GETPLATINUM_FORM_URL', '')
+GETPLATINUM_WEBHOOK_SECRET = os.getenv('GETPLATINUM_WEBHOOK_SECRET', '')
+
+# Имена параметров в ссылке на оплату. Если в кабинете они называются
+# иначе — правится здесь через .env, без изменений в коде.
+GETPLATINUM_ORDER_PARAM = os.getenv('GETPLATINUM_ORDER_PARAM', 'order_id')
+GETPLATINUM_AMOUNT_PARAM = os.getenv('GETPLATINUM_AMOUNT_PARAM', 'amount')
+GETPLATINUM_DESCRIPTION_PARAM = os.getenv('GETPLATINUM_DESCRIPTION_PARAM', 'description')
+GETPLATINUM_RETURN_PARAM = os.getenv('GETPLATINUM_RETURN_PARAM', 'return_url')
+GETPLATINUM_PHONE_PARAM = os.getenv('GETPLATINUM_PHONE_PARAM', 'customer_phone')
+
+# Признак успешной оплаты в уведомлении. Пока поле не задано, доступ по
+# непонятному уведомлению НЕ выдаётся — приходит сообщение в Telegram со
+# списком полей, чтобы заполнить эти две строки после первой же оплаты.
+GETPLATINUM_SUCCESS_FIELD = os.getenv('GETPLATINUM_SUCCESS_FIELD', '')
+GETPLATINUM_SUCCESS_VALUES = os.getenv('GETPLATINUM_SUCCESS_VALUES', 'success,paid,succeeded')
+
 # Безопасность за реверс-прокси (включается только в проде)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

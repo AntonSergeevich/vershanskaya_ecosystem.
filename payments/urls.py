@@ -12,4 +12,8 @@ urlpatterns = [
     path('podpiska/otmena/', views.cancel_subscription, name='cancel_subscription'),
     # Адрес вебхука указывается в личном кабинете эквайринга.
     path('webhook/', views.webhook, name='webhook'),
+    # У GetPlatinum секрет стоит прямо в адресе — он и подтверждает, что
+    # уведомление пришло от них.
+    path('webhook/getplatinum/<str:secret>/', views.getplatinum_webhook,
+         name='getplatinum_webhook'),
 ]

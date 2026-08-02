@@ -19,6 +19,7 @@ from crm import services as crm
 from lms.models import CourseAccess
 from users.models import Subscription
 
+from . import getplatinum
 from .models import Payment
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,8 @@ def is_gateway_configured():
         return bool(settings.YOOKASSA_SHOP_ID and settings.YOOKASSA_SECRET_KEY)
     if settings.PAYMENT_PROVIDER == 'prodamus':
         return bool(settings.PRODAMUS_FORM_URL)
+    if settings.PAYMENT_PROVIDER == 'getplatinum':
+        return getplatinum.is_configured()
     return False
 
 
@@ -71,6 +74,11 @@ def build_confirmation_url(payment, request):
     if not is_gateway_configured():
         payment.confirmation_url = request.build_absolute_uri(
             reverse('payments:manual_confirm', kwargs={'key': payment.idempotency_key}))
+        payment.save(update_fields=['confirmation_url'])
+        return payment.confirmation_url
+
+    if settings.PAYMENT_PROVIDER == 'getplatinum':
+        payment.confirmation_url = getplatinum.payment_url(payment, return_url)
         payment.save(update_fields=['confirmation_url'])
         return payment.confirmation_url
 

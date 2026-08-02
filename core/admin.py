@@ -12,6 +12,12 @@ class LegalInfoAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Продавец', {'fields': ('entity_type', 'legal_name', 'inn', 'ogrn', 'address')}),
         ('Контакты', {'fields': ('email', 'phone', 'site_url')}),
+        ('Банк', {
+            'fields': ('bank_account', 'bank_name', 'bank_bik',
+                       'bank_corr_account', 'bank_inn', 'bank_address'),
+            'description': "Нужны для оферты и для оплаты по счёту. "
+                           "Заполняются командой seed_requisites.",
+        }),
     )
 
     def has_add_permission(self, request):

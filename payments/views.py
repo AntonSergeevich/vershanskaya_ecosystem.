@@ -1,3 +1,4 @@
+import hmac
 import json
 import logging
 
@@ -13,7 +14,7 @@ from core.models import FAQItem, Testimonial
 from core.services import telegram
 from lms.models import Course
 
-from . import services
+from . import getplatinum, services
 from .models import Payment
 
 logger = logging.getLogger(__name__)
@@ -153,3 +154,74 @@ def cancel_subscription(request):
             "Автопродление отключено. Клуб остаётся открытым до "
             f"{subscription.next_billing_date:%d.%m.%Y}.")
     return redirect('users:profile')
+
+
+@csrf_exempt
+@require_POST
+def getplatinum_webhook(request, secret):
+    """Уведомление об оплате от GetPlatinum.
+
+    Подлинность подтверждает секрет в самом адресе: его знают только мы и
+    GetPlatinum (он указывается в их кабинете). Когда появится описание их
+    подписи, проверку можно будет ужесточить, не трогая остальное.
+
+    Отвечаем 200 почти всегда: на 4xx и 5xx сервисы шлют повторы, а нам
+    повтор не поможет — проблема не в сети, а в содержимом.
+    """
+    if not hmac.compare_digest(secret, settings.GETPLATINUM_WEBHOOK_SECRET or '\x00'):
+        logger.warning("GetPlatinum: уведомление с чужим секретом в адресе.")
+        raise Http404
+
+    data = getplatinum.parse_body(request)
+    if data is None:
+        logger.error("GetPlatinum: не разобрал тело уведомления.")
+        return HttpResponse(status=400)
+
+    pending = {str(key).lower(): pk for key, pk in
+               Payment.objects.exclude(status=Payment.STATUS_CANCELED)
+                              .values_list('idempotency_key', 'pk')}
+    order = getplatinum.find_order_key(data, pending)
+
+    if order is None:
+        logger.warning("GetPlatinum: не нашёл наш номер заказа. Поля: %s",
+                       ', '.join(sorted(data)))
+        telegram.notify_admins(
+            "⚠️ <b>Оплата пришла, но заказ не найден</b>\n"
+            f"Поля уведомления: {', '.join(sorted(data)) or '—'}\n"
+            "Проверьте GETPLATINUM_ORDER_PARAM в .env.")
+        return HttpResponse(status=200)
+
+    payment = Payment.objects.get(pk=pending[order])
+
+    # Сумма: если она в уведомлении есть и не сошлась — это либо чужой
+    # платёж, либо ошибка в ссылке. В обоих случаях доступ не выдаём.
+    amount = getplatinum.find_amount(data)
+    if amount is not None and amount != payment.amount:
+        logger.error("GetPlatinum: сумма не сошлась (%s вместо %s) по платежу #%s",
+                     amount, payment.amount, payment.pk)
+        telegram.notify_admins(
+            f"🚫 <b>Сумма оплаты не сошлась</b>\n{payment.user.display_name}\n"
+            f"Пришло {amount} ₽ вместо {payment.amount} ₽. Доступ не выдан.")
+        return HttpResponse(status=200)
+
+    outcome = getplatinum.is_success(data)
+
+    if outcome is None:
+        # Правило успеха ещё не настроено. Открывать клуб наугад нельзя:
+        # уведомление может быть и об отказе.
+        logger.warning("GetPlatinum: не понял статус платежа #%s. Поля: %s",
+                       payment.pk, ', '.join(sorted(data)))
+        telegram.notify_admins(
+            f"❓ <b>Уведомление об оплате, статус непонятен</b>\n"
+            f"{payment.user.display_name} — {payment.amount} ₽\n"
+            f"Поля: {', '.join(sorted(data))}\n"
+            "Доступ пока не выдан. Подтвердите вручную и пропишите "
+            "GETPLATINUM_SUCCESS_FIELD в .env.")
+        return HttpResponse(status=200)
+
+    if outcome:
+        services.grant_access(payment)
+    else:
+        logger.info("GetPlatinum: платёж #%s не прошёл.", payment.pk)
+
+    return HttpResponse(status=200)
